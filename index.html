@@ -122,6 +122,17 @@ h3{font-size:14px;font-weight:600}
 .bubble b{font-weight:700}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .fmt{margin-top:10px;font-size:12px;color:var(--muted)}
+.fields{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;background:var(--bg)}
+.fields .fh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.fields .fh b{font-size:12.5px;font-weight:600}
+.fields .fh span{font-size:11.5px;color:var(--muted)}
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{font:inherit;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 5px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.fchip i{font-style:normal;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:700;background:var(--sunk);color:var(--muted)}
+.fchip[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:var(--accent-soft);font-weight:500}
+.fchip[aria-pressed="true"] i{background:var(--accent);color:var(--accent-ink)}
+.fchip:focus-visible,.linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.linkbtn{font:inherit;font-size:11.5px;border:0;background:none;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
 code{font-family:var(--f-mono);font-size:11.5px;background:var(--sunk);padding:1px 5px;border-radius:4px}
 
 /* Tracker rows */
@@ -254,13 +265,17 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
     <div class="panel">
       <div class="head"><div><h2>WhatsApp message</h2><div class="sub">Written in the planning format, ready to send.</div></div></div>
       <div class="daychips" id="dayChips" role="group" aria-label="Days to include"></div>
+      <div class="fields">
+        <div class="fh"><b>Info in each line</b><span>Click in the order you want. Click again to remove. <button type="button" class="linkbtn" id="fieldsReset">Reset</button></span></div>
+        <div class="fchips" id="fieldChips" role="group" aria-label="Info in each message line"></div>
+      </div>
       <label class="opt"><input type="checkbox" id="incTent" checked> Include options (not yet confirmed)</label>
       <div class="chat"><div class="bubble" id="bubble"></div></div>
       <div class="actions">
         <button class="btn primary" id="copyMsg" type="button">Copy message</button>
         <a class="btn" id="waLink" href="#" target="_blank" rel="noopener">Open in WhatsApp</a>
       </div>
-      <p class="fmt">Each line: <code>name &gt; time &gt; purpose &gt; location &gt; team</code></p>
+      <p class="fmt">Each line: <code id="fmtLine">name &gt; time &gt; purpose &gt; location &gt; team</code></p>
     </div>
   </section>
 
@@ -527,17 +542,36 @@ function renderPlan(){
   $('dayChips').innerHTML = `<button type="button" class="daychip" data-day="all" aria-pressed="${!!all}">Whole week</button>` +
     wd.map(({d,evs}) => `<button type="button" class="daychip" data-day="${dkey(d)}" aria-pressed="${!all && S.days.includes(dkey(d))}" ${evs.length?'':'disabled'}>${DAYS[d.getDay()]} ${d.getDate()}</button>`).join('');
   $('incTent').checked = S.incTent;
+  renderFields();
   const msg = buildMsg(wd);
   $('bubble').innerHTML = msg ? esc(msg).replace(/\*([^*\n]+)\*/g,'<b>$1</b>') : '<span style="opacity:.7">No fittings in the selected days.</span>';
   $('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
   $('copyMsg').disabled = !msg;
+}
+/* Message fields: chosen by clicking, in click order, saved in this browser */
+const FIELDS = {
+  nom:{l:'Name', v:e => e.nom}, time:{l:'Time', v:e => `${hfmt(e.debut)}–${hfmt(e.fin)}`}, com:{l:'Purpose', v:e => e.com || 'Fitting'},
+  loc:{l:'Location', v:e => e.loc}, team:{l:'Team', v:e => team(e)}, agence:{l:'Agency', v:e => e.agence}, coll:{l:'Collection', v:e => e.coll},
+  saison:{l:'Season', v:e => e.saison}, cat:{l:'Category', v:e => e.cat}, genre:{l:'WRTW / MRTW', v:e => e.genre}, heures:{l:'Hours', v:e => hfmt(e.heures)}
+};
+const DEFAULT_FIELDS = ['nom','time','com','loc','team'];
+let MSGF = store.get('fp3-msgfields', DEFAULT_FIELDS).filter(f => FIELDS[f]);
+if (!MSGF.length) MSGF = [...DEFAULT_FIELDS];
+function renderFields(){
+  const order = [...MSGF, ...Object.keys(FIELDS).filter(f => !MSGF.includes(f))];
+  $('fieldChips').innerHTML = order.map(f => { const i = MSGF.indexOf(f); return `<button type="button" class="fchip" data-f="${f}" aria-pressed="${i>=0}"><i>${i>=0 ? i+1 : '+'}</i>${FIELDS[f].l}</button>`; }).join('');
+  $('fmtLine').textContent = MSGF.map(f => FIELDS[f].l.toLowerCase()).join(' > ');
 }
 function buildMsg(wd){
   const blocks = [];
   wd.filter(x => S.days.includes(dkey(x.d))).forEach(({d,evs}) => {
     const ok = evs.filter(e => e.st==='C' || (S.incTent && e.st==='T'));
     if (!ok.length) return;
-    blocks.push(`*Planning – ${dayLbl(d)}*\n` + ok.map(e => [e.nom, `${hfmt(e.debut)}–${hfmt(e.fin)}`, (e.com||'Fitting') + (e.st==='T'?' (option)':''), e.loc||'TBC', team(e)||'TBC'].join(' > ')).join('\n'));
+    blocks.push(`*Planning – ${dayLbl(d)}*\n` + ok.map(e => {
+      const parts = MSGF.map(f => FIELDS[f].v(e) || 'TBC');
+      if (e.st==='T'){ const i = MSGF.indexOf('com'); if (i >= 0) parts[i] += ' (option)'; else parts.push('(option)'); }
+      return parts.join(' > ');
+    }).join('\n'));
   });
   return blocks.join('\n\n');
 }
@@ -684,6 +718,15 @@ $('dayChips').onclick = e => {
   renderPlan();
 };
 $('incTent').onchange = e => { S.incTent = e.target.checked; renderPlan(); };
+$('fieldChips').onclick = e => {
+  const b = e.target.closest('[data-f]'); if (!b) return;
+  const f = b.dataset.f;
+  if (MSGF.includes(f)){ if (MSGF.length === 1) return toast('Keep at least one piece of info in the message'); MSGF = MSGF.filter(x => x !== f); }
+  else MSGF.push(f);
+  store.set('fp3-msgfields', MSGF); renderPlan();
+  document.querySelector(`#fieldChips [data-f="${f}"]`)?.focus();
+};
+$('fieldsReset').onclick = () => { MSGF = [...DEFAULT_FIELDS]; store.set('fp3-msgfields', MSGF); renderPlan(); toast('Back to name > time > purpose > location > team'); };
 $('copyMsg').onclick = () => copy(buildMsg(weekDays()), 'Message copied. Paste it into WhatsApp.');
 
 $('fShow').onclick = e => { const b = e.target.closest('[data-v]'); if (b){ S.show = b.dataset.v; renderRows(); } };
