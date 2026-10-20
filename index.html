@@ -412,7 +412,7 @@ function parseICS(text){
   const field = (t, labels) => { for (const l of labels){ const m = t.match(new RegExp('(?:^|\\n)\\s*' + l + '\\s*[:=]\\s*([^\\n]+)', 'i')); if (m) return m[1].trim(); } return ''; };
   return evs.filter(e => e.start).map(e => {
     const all = [e.summary, e.desc, e.cat].filter(Boolean).join('\n');
-    const parts = (e.summary||'').split(/\s*(?:>|–|—|\||:| - )\s*/).filter(Boolean);
+    const parts = (e.summary||'').split(/\s*(?:>|–|—|\||:| - )\s*/).filter(x => x && !/^(annul[ée]e?|cancel+ed)$/i.test(x));
     const com = field(all, ['Objet','Purpose','Commentaires?']) || parts.find(x => PURP.test(x)) || '';
     const nom = field(all, ['Nom','Model','Mannequin']) || parts.find(x => x !== com && !/^(WRTW|MRTW)$/i.test(x)) || e.summary || '';
     const end = e.end || new Date(e.start.getTime() + 3.6e6);
@@ -553,6 +553,8 @@ function renderRows(){
   const todo = S.rows.filter(b => !isCopied(b)).length;
   const blanks = S.rows.filter(b => !isCopied(b) && b.st!=='A' && ['nom','agence','cat','genre','coll','saison','loc','estime','com'].some(k => b[k]==='' || b[k]==null)).length;
   $('rowsSub').textContent = `${todo} fitting${todo===1?'':'s'} not copied to the tracker yet${blanks ? `, ${blanks} with blue cells to complete` : ''}.`;
+  const noRate = Object.keys(RATES).filter(ag => !RATES[ag].day && S.rows.some(b => b.agence===ag && !isCopied(b)));
+  if (noRate.length){ $('rowsSub').textContent += ` Set the day rate for ${noRate.length} agenc${noRate.length===1?'y':'ies'} below to fill Estimé.`; document.querySelector('details.rates').open = true; }
   const sel = [...S.sel].map(byKey).filter(Boolean);
   $('selCnt').innerHTML = `${sel.length} row${sel.length===1?'':'s'} selected<small>${sel.length ? 'Copy them, then paste in column A of the first empty row of the tracker. They are then marked as copied.' : 'Tick rows in the table to export them.'}</small>`;
   $('copySel').disabled = !sel.length; $('dlSel').hidden = inIframe; $('dlSel').disabled = !sel.length;
