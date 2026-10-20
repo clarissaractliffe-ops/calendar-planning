@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>Fittings Planner</title>
+<title>Calendar Planning</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,7 +100,13 @@ h3{font-size:14px;font-weight:600}
 .day + .day{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .day h3{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
 .day h3 span{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:12.5px}
-.ev{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 10px;border-radius:8px;background:var(--bg)}
+.ev{display:grid;grid-template-columns:18px 96px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 10px;border-radius:8px;background:var(--bg);border:1px solid transparent;cursor:pointer}
+.ev:hover{border-color:var(--line)}
+.ev.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--surface))}
+.ev input{margin:0;width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+.day h3 .dsel{font:inherit;font-family:var(--f-body);font-size:12px;font-weight:500;border:0;background:none;color:var(--accent);cursor:pointer;padding:0;margin-left:10px;text-decoration:underline}
+.selbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:13px}
+.selbar b{font-weight:600}
 .ev + .ev{margin-top:6px}
 .ev.cancel{opacity:.55}
 .ev.cancel .who{text-decoration:line-through}
@@ -111,7 +117,7 @@ h3{font-size:14px;font-weight:600}
 .status.C{border-color:color-mix(in srgb,var(--good) 50%,var(--surface));color:var(--good)}
 .status.T{border-color:color-mix(in srgb,var(--tent) 50%,var(--surface));color:var(--tent)}
 .status.A{border-color:color-mix(in srgb,var(--crit) 50%,var(--surface));color:var(--crit)}
-@media (max-width:520px){.ev{grid-template-columns:minmax(0,1fr) auto}.ev .t{grid-column:1/-1}}
+@media (max-width:520px){.ev{grid-template-columns:18px minmax(0,1fr) auto}.ev .t{grid-column:2/-1;grid-row:1}.ev input{grid-row:1/3}}
 .empty{color:var(--muted);padding:10px 2px}
 .daychips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .daychip{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
@@ -195,7 +201,7 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
 <div class="wrap">
   <header>
     <div class="eyebrow">RTW Development · Model fittings</div>
-    <h1>Fittings Planner</h1>
+    <h1>Calendar Planning</h1>
     <p class="lede">Marie's Outlook calendar becomes the WhatsApp planning message and ready-made rows for the model tracker, in the tracker's own columns.</p>
   </header>
 
@@ -212,7 +218,7 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
               <li>Open Outlook on the web (outlook.office.com) and click the gear icon → Calendar → Shared calendars.</li>
               <li>Under Publish a calendar, choose Calendar and set the permission to Can view all details, so titles and locations are included. Then click Publish.</li>
               <li>Two links appear. Copy the ICS link and paste it into your browser. A .ics file downloads.</li>
-              <li>In Fittings Planner, click Load .ics and pick that file.</li>
+              <li>In Calendar Planning, click Load .ics and pick that file.</li>
             </ol>
           </span>
         </span>
@@ -246,17 +252,17 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
   <!-- Planning -->
   <section id="v-plan" class="plan" role="tabpanel" aria-labelledby="t-plan">
     <div class="panel">
-      <div class="head"><div><h2>Fittings this week</h2><div class="sub">From the calendar. Click a status to change it.</div></div></div>
+      <div class="head"><div><h2>Meetings this week</h2><div class="sub">Click the meetings to put in the message. Click a status to change it.</div></div><div class="actions" style="margin:0"><button class="btn small" id="selWeek" type="button">Select whole week</button><button class="btn small" id="selClear" type="button">Clear selection</button></div></div>
       <div id="days"></div>
     </div>
     <div class="panel">
       <div class="head"><div><h2>WhatsApp message</h2><div class="sub">Written in the planning format, ready to send.</div></div></div>
-      <div class="daychips" id="dayChips" role="group" aria-label="Days to include"></div>
+      <div class="selbar"><span id="selInfo"></span></div>
+      <div class="daychips" id="dayChips" role="group" aria-label="Select a whole day"></div>
       <div class="fields">
         <div class="fh"><b>Info in each line</b><span>Click in the order you want. Click again to remove. <button type="button" class="linkbtn" id="fieldsReset">Reset</button></span></div>
         <div class="fchips" id="fieldChips" role="group" aria-label="Info in each message line"></div>
       </div>
-      <label class="opt"><input type="checkbox" id="incTent" checked> Include options (not yet confirmed)</label>
       <div class="chat"><div class="bubble" id="bubble"></div></div>
       <div class="actions">
         <button class="btn primary" id="copyMsg" type="button">Copy message</button>
@@ -437,7 +443,7 @@ function parseICS(text){
 }
 
 /* ---------- State ---------- */
-const S = {tab:'plan', week: mondayOf(new Date()), days:null, incTent:true, show:'todo', month:'all', ag:'all', q:'',
+const S = {tab:'plan', week: mondayOf(new Date()), msel:new Set(), mselInit:false, show:'todo', month:'all', ag:'all', q:'',
   budget:1200000, file:null, rows:[], sel:new Set(), selTouched:false, cap:200};
 let COPIED = {}, EDITS = {};
 const K = () => S.file ? 'fp3-real' : 'fp3-sample';
@@ -450,7 +456,7 @@ const isCopied = b => !!COPIED[b.key];
 function defaultSel(){ if (!S.selTouched) S.sel = new Set(S.rows.filter(b => !isCopied(b) && b.st!=='T').map(b => b.key)); }
 
 function load(rows, file, copiedSeed){
-  S.rows = rows; S.file = file; S.days = null; S.selTouched = false; S.month = 'all'; S.ag = 'all'; S.q = ''; S.cap = 200;
+  S.rows = rows; S.file = file; S.msel = new Set(); S.mselInit = false; S.selTouched = false; S.month = 'all'; S.ag = 'all'; S.q = ''; S.cap = 200;
   COPIED = store.get(K()+'-copied', copiedSeed || {}); EDITS = store.get(K()+'-edits', {});
   RATES = store.get('fp3-rates-'+(file?'real':'sample'), file ? {} : {...SAMPLE_RATES});
   S.budget = store.get('fp3-budget', 1200000);
@@ -491,24 +497,29 @@ function renderPlan(){
   const we = addDays(S.week, 4);
   $('weekLbl').textContent = `${S.week.getDate()} ${MONTHS[S.week.getMonth()]} – ${we.getDate()} ${MONTHS[we.getMonth()]}`;
   const wd = weekDays();
+  if (!S.mselInit){
+    S.mselInit = true;
+    const t = dkey(new Date()), days = [...new Set(S.rows.map(b => dkey(b.date)))].sort();
+    const nx = days.find(k => k > t) || days.find(k => k === t);
+    if (nx) S.rows.forEach(b => { if (dkey(b.date)===nx && b.st!=='A') S.msel.add(b.key); });
+  }
   $('days').innerHTML = wd.map(({d,evs}) => {
-    const live = evs.filter(e=>e.st!=='A').length;
-    return `<div class="day"><h3>${dayLbl(d)}<span>${live} fitting${live===1?'':'s'}</span></h3>
-    ${evs.length ? evs.map(e => `<div class="ev${e.st==='A'?' cancel':''}">
+    const live = evs.filter(e=>e.st!=='A').length, allOn = evs.length && evs.every(e => S.msel.has(e.key));
+    return `<div class="day"><h3><span style="font:inherit;color:inherit">${dayLbl(d)}${evs.length?`<button type="button" class="dsel" data-dsel="${dkey(d)}">${allOn?'Unselect day':'Select day'}</button>`:''}</span><span>${live} meeting${live===1?'':'s'}</span></h3>
+    ${evs.length ? evs.map(e => { const on = S.msel.has(e.key); return `<div class="ev${e.st==='A'?' cancel':''}${on?' on':''}" data-pick="${esc(e.key)}">
+        <input type="checkbox" ${on?'checked':''} data-pick="${esc(e.key)}" aria-label="Put ${esc(e.nom)}, ${dayLbl(d)} ${hfmt(e.debut)} in the message">
         <div class="t">${hfmt(e.debut)}–${hfmt(e.fin)}</div>
         <div><div class="who">${esc(e.nom)}</div><div class="meta"><span>${esc(e.com||'—')}</span>${e.loc?`<span>${esc(e.loc)}</span>`:''}${team(e)?`<span>${esc(team(e))}</span>`:''}${e.agence?`<span>${esc(e.agence)}</span>`:''}</div></div>
         <button type="button" class="status ${e.st}" data-key="${esc(e.key)}" title="Change status">${stLbl[e.st]}</button>
-      </div>`).join('') : '<div class="empty">No fittings</div>'}</div>`;
+      </div>`; }).join('') : '<div class="empty">No meetings</div>'}</div>`;
   }).join('');
-  const withEv = wd.filter(x => x.evs.length);
-  if (!S.days){ const t = dkey(new Date()); const nx = withEv.find(x => dkey(x.d) > t) || withEv.find(x => dkey(x.d)===t); S.days = nx ? [dkey(nx.d)] : withEv.map(x=>dkey(x.d)); }
-  const all = withEv.length && withEv.every(x => S.days.includes(dkey(x.d)));
-  $('dayChips').innerHTML = `<button type="button" class="daychip" data-day="all" aria-pressed="${!!all}">Whole week</button>` +
-    wd.map(({d,evs}) => `<button type="button" class="daychip" data-day="${dkey(d)}" aria-pressed="${!all && S.days.includes(dkey(d))}" ${evs.length?'':'disabled'}>${DAYS[d.getDay()]} ${d.getDate()}</button>`).join('');
-  $('incTent').checked = S.incTent;
+  $('dayChips').innerHTML = wd.map(({d,evs}) => { const on = evs.length && evs.every(e => S.msel.has(e.key)); return `<button type="button" class="daychip" data-dsel="${dkey(d)}" aria-pressed="${!!on}" ${evs.length?'':'disabled'}>${DAYS[d.getDay()]} ${d.getDate()}</button>`; }).join('');
+  const sel = S.rows.filter(b => S.msel.has(b.key)), days = new Set(sel.map(b => dkey(b.date)));
+  const other = sel.filter(b => b.date < S.week || b.date >= addDays(S.week,7)).length;
+  $('selInfo').innerHTML = sel.length ? `<b>${sel.length} meeting${sel.length===1?'':'s'}</b>&nbsp;selected over ${days.size} day${days.size===1?'':'s'}${other ? `, ${other} of them in other weeks` : ''}` : 'No meetings selected. Click meetings on the left, or a day below.';
   renderFields();
-  const msg = buildMsg(wd);
-  $('bubble').innerHTML = msg ? esc(msg).replace(/\*([^*\n]+)\*/g,'<b>$1</b>') : '<span style="opacity:.7">No fittings in the selected days.</span>';
+  const msg = buildMsg();
+  $('bubble').innerHTML = msg ? esc(msg).replace(/\*([^*\n]+)\*/g,'<b>$1</b>') : '<span style="opacity:.7">Select meetings to build the message.</span>';
   $('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
   $('copyMsg').disabled = !msg;
 }
@@ -526,18 +537,15 @@ function renderFields(){
   $('fieldChips').innerHTML = order.map(f => { const i = MSGF.indexOf(f); return `<button type="button" class="fchip" data-f="${f}" aria-pressed="${i>=0}"><i>${i>=0 ? i+1 : '+'}</i>${FIELDS[f].l}</button>`; }).join('');
   $('fmtLine').textContent = MSGF.map(f => FIELDS[f].l.toLowerCase()).join(' > ');
 }
-function buildMsg(wd){
-  const blocks = [];
-  wd.filter(x => S.days.includes(dkey(x.d))).forEach(({d,evs}) => {
-    const ok = evs.filter(e => e.st==='C' || (S.incTent && e.st==='T'));
-    if (!ok.length) return;
-    blocks.push(`*Planning – ${dayLbl(d)}*\n` + ok.map(e => {
-      const parts = MSGF.map(f => FIELDS[f].v(e) || 'TBC');
-      if (e.st==='T'){ const i = MSGF.indexOf('com'); if (i >= 0) parts[i] += ' (option)'; else parts.push('(option)'); }
-      return parts.join(' > ');
-    }).join('\n'));
-  });
-  return blocks.join('\n\n');
+function buildMsg(){
+  const sel = S.rows.filter(b => S.msel.has(b.key)).sort((a,b) => a.date - b.date || a.debut - b.debut);
+  const byDay = new Map(); sel.forEach(b => { const k = dkey(b.date); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(b); });
+  return [...byDay.values()].map(evs => `*Planning – ${dayLbl(evs[0].date)}*\n` + evs.map(e => {
+    const parts = MSGF.map(f => FIELDS[f].v(e) || 'TBC');
+    const tag = e.st==='T' ? ' (option)' : e.st==='A' ? ' (cancelled)' : '';
+    if (tag){ const i = MSGF.indexOf('com'); if (i >= 0) parts[i] += tag; else parts.push(tag.trim()); }
+    return parts.join(' > ');
+  }).join('\n')).join('\n\n');
 }
 
 const monthKey = d => d.getFullYear()*100 + d.getMonth();
@@ -632,23 +640,26 @@ $('dlSel').onclick = () => {
 
 /* ---------- Events ---------- */
 document.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b){ S.tab = b.dataset.tab; render(); } };
-$('prevW').onclick = () => { S.week = addDays(S.week,-7); S.days=null; render(); };
-$('nextW').onclick = () => { S.week = addDays(S.week,7); S.days=null; render(); };
-$('todayW').onclick = () => { S.week = mondayOf(new Date()); S.days=null; render(); };
+$('prevW').onclick = () => { S.week = addDays(S.week,-7); render(); };
+$('nextW').onclick = () => { S.week = addDays(S.week,7); render(); };
+$('todayW').onclick = () => { S.week = mondayOf(new Date()); render(); };
 function setStatus(b, st){
   if (st==='A' && b.st!=='A'){ b._est = b.estime; edit(b,'estime',0); }
   if (st!=='A' && b.st==='A'){ edit(b,'estime', b._est || rateFor(b.agence, b.heures)); }
   edit(b,'st',st);
 }
-$('days').onclick = e => { const btn = e.target.closest('.status'); if (!btn) return; const b = byKey(btn.dataset.key); setStatus(b, {C:'T', T:'A', A:'C'}[b.st]); persist(); render(); };
-$('dayChips').onclick = e => {
-  const b = e.target.closest('[data-day]'); if (!b || b.disabled) return;
-  const wd = weekDays().filter(x=>x.evs.length).map(x=>dkey(x.d));
-  if (b.dataset.day==='all') S.days = wd;
-  else { const allOn = wd.every(k => S.days.includes(k)); S.days = allOn ? [b.dataset.day] : (S.days.includes(b.dataset.day) ? S.days.filter(k=>k!==b.dataset.day) : [...S.days, b.dataset.day]); if (!S.days.length) S.days = [b.dataset.day]; }
-  renderPlan();
+function toggleDay(k){ const evs = S.rows.filter(b => dkey(b.date)===k); const on = evs.every(b => S.msel.has(b.key)); evs.forEach(b => on ? S.msel.delete(b.key) : S.msel.add(b.key)); renderPlan(); }
+$('days').onclick = e => {
+  const btn = e.target.closest('.status');
+  if (btn){ const b = byKey(btn.dataset.key); setStatus(b, {C:'T', T:'A', A:'C'}[b.st]); persist(); render(); return; }
+  const ds = e.target.closest('[data-dsel]'); if (ds){ toggleDay(ds.dataset.dsel); return; }
+  const card = e.target.closest('.ev[data-pick]'); if (!card) return;
+  const k = card.dataset.pick; S.msel.has(k) ? S.msel.delete(k) : S.msel.add(k);
+  renderPlan(); document.querySelector(`#days input[data-pick="${CSS.escape(k)}"]`)?.focus();
 };
-$('incTent').onchange = e => { S.incTent = e.target.checked; renderPlan(); };
+$('selWeek').onclick = () => { S.rows.filter(b => b.date >= S.week && b.date < addDays(S.week,7)).forEach(b => S.msel.add(b.key)); renderPlan(); };
+$('selClear').onclick = () => { S.msel.clear(); renderPlan(); };
+$('dayChips').onclick = e => { const b = e.target.closest('[data-dsel]'); if (b && !b.disabled) toggleDay(b.dataset.dsel); };
 $('fieldChips').onclick = e => {
   const b = e.target.closest('[data-f]'); if (!b) return;
   const f = b.dataset.f;
