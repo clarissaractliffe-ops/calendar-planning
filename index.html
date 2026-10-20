@@ -9,12 +9,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* Layout: one calendar feeds three tabs. Planning (day list + WhatsApp preview), Budget tracker (editable table + totals), Invoices (per agency). */
+/* Layout: two sources (Outlook calendar, Excel tracker) feed four tabs: Planning message, Tracker rows, Budget, Invoices. */
 :root{
   --bg:#F2F3F5; --surface:#FFFFFF; --sunk:#E7E9EE; --ink:#171C26; --muted:#5A6272; --line:#D6DAE2;
   --accent:#2D4775; --accent-ink:#FFFFFF; --accent-soft:#DEE5F2;
   --good:#3D8A57; --warn:#C7861C; --crit:#B4473A; --tent:#8A6FB0;
+  --todo:#D9E1F2; --new:#E7F3EA;
   --wa-bg:#E6DED5; --wa-bubble:#D9FDD3; --wa-ink:#111B21;
   --f-display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -25,138 +27,175 @@
   --bg:#10131A; --surface:#171B24; --sunk:#1F2430; --ink:#E5E8EF; --muted:#98A0B0; --line:#2A3040;
   --accent:#8FA9DA; --accent-ink:#0E1320; --accent-soft:#232E45;
   --good:#6DBB86; --warn:#E0A440; --crit:#E2796A; --tent:#B39BD8;
+  --todo:#26324A; --new:#1D3326;
   --wa-bg:#0B141A; --wa-bubble:#005C4B; --wa-ink:#E9EDEF; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10131A; --surface:#171B24; --sunk:#1F2430; --ink:#E5E8EF; --muted:#98A0B0; --line:#2A3040;
   --accent:#8FA9DA; --accent-ink:#0E1320; --accent-soft:#232E45;
   --good:#6DBB86; --warn:#E0A440; --crit:#E2796A; --tent:#B39BD8;
+  --todo:#26324A; --new:#1D3326;
   --wa-bg:#0B141A; --wa-bubble:#005C4B; --wa-ink:#E9EDEF; color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
-.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
 h1{font-size:clamp(26px,4vw,36px);font-weight:700;line-height:1.1}
 h2{font-size:17px;font-weight:600}
 h3{font-size:14px;font-weight:600}
 .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
-.lede{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.lede{margin:6px 0 0;color:var(--muted);max-width:66ch}
 .num{font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.muted{color:var(--muted)}
+
 .top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px}
-.source{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--sunk);color:var(--muted);font-size:12.5px;font-weight:500}
-.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warn)}
-.pill.real::before{background:var(--good)}
-.note{margin:-8px 0 0;color:var(--muted);font-size:12.5px;max-width:90ch}
+.sources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.sources{grid-template-columns:minmax(0,1fr)}}
+.src{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.src .dot{width:9px;height:9px;border-radius:50%;background:var(--warn);flex:none}
+.src.real .dot{background:var(--good)}
+.src .txt{flex:1;min-width:0}
+.src .txt b{display:block;font-weight:600;font-size:13.5px}
+.src .txt span{display:block;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.note{margin:-6px 0 0;color:var(--muted);font-size:12.5px;max-width:100ch}
+
 .btn{font:inherit;font-weight:500;font-size:13.5px;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
 .btn:hover{border-color:var(--accent)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.small{padding:6px 10px;font-size:12.5px}
 .btn:disabled{opacity:.5;cursor:default}
-:is(.btn,select,input,.tab,.daychip):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:is(.btn,select,input,textarea,.tab,.daychip,.status,.rowcopy):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 .bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
 .tabs{display:inline-flex;background:var(--sunk);border-radius:10px;padding:4px;gap:2px;flex-wrap:wrap}
 .tab{font:inherit;font-weight:500;font-size:13.5px;border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:7px;cursor:pointer}
 .tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.tab .ct{font-size:11.5px;color:var(--muted);margin-left:4px}
+.tab .ct{font-size:11px;font-weight:600;margin-left:5px;padding:1px 6px;border-radius:999px;background:var(--good);color:var(--surface)}
 .weeknav{display:flex;align-items:center;gap:6px}
-.weeknav .lbl{font-family:var(--f-display);font-weight:600;font-size:15px;min-width:170px;text-align:center}
+.weeknav .lbl{font-family:var(--f-display);font-weight:600;font-size:15px;min-width:150px;text-align:center}
 .iconbtn{font:inherit;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;line-height:1}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
 .panel .head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
-.sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.view{display:flex;flex-direction:column;gap:18px}
 
 /* Planning */
-.plan{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:18px;align-items:start}
-@media (max-width:880px){.plan{grid-template-columns:minmax(0,1fr)}}
-.day{display:flex;flex-direction:column;gap:6px}
+.plan{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:18px;align-items:start}
+@media (max-width:900px){.plan{grid-template-columns:minmax(0,1fr)}}
 .day + .day{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-.day h3{display:flex;justify-content:space-between;align-items:baseline}
+.day h3{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
 .day h3 span{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:12.5px}
 .ev{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 10px;border-radius:8px;background:var(--bg)}
+.ev + .ev{margin-top:6px}
 .ev.cancel{opacity:.55}
 .ev.cancel .who{text-decoration:line-through}
 .ev .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:13px}
 .ev .who{font-weight:600}
 .ev .meta{color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:2px 10px}
-.status{font:inherit;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
-.status.Confirmed{border-color:color-mix(in srgb,var(--good) 50%,var(--surface));color:var(--good)}
-.status.Tentative{border-color:color-mix(in srgb,var(--tent) 50%,var(--surface));color:var(--tent)}
-.status.Cancelled{border-color:color-mix(in srgb,var(--crit) 50%,var(--surface));color:var(--crit)}
+.newtag{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:4px;background:var(--new);color:var(--good);margin-left:6px;vertical-align:1px}
+.status{font:inherit;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.status.C{border-color:color-mix(in srgb,var(--good) 50%,var(--surface));color:var(--good)}
+.status.T{border-color:color-mix(in srgb,var(--tent) 50%,var(--surface));color:var(--tent)}
+.status.A{border-color:color-mix(in srgb,var(--crit) 50%,var(--surface));color:var(--crit)}
 @media (max-width:520px){.ev{grid-template-columns:minmax(0,1fr) auto}.ev .t{grid-column:1/-1}}
 .empty{color:var(--muted);padding:10px 2px}
-
 .daychips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .daychip{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
 .daychip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:500}
 .daychip:disabled{opacity:.45;cursor:default}
 .opt{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:12px}
-.chat{background:var(--wa-bg);border-radius:12px;padding:16px 14px;min-height:180px}
+.chat{background:var(--wa-bg);border-radius:12px;padding:16px 14px;min-height:160px}
 .bubble{background:var(--wa-bubble);color:var(--wa-ink);border-radius:10px 2px 10px 10px;padding:9px 11px 6px;margin-left:auto;max-width:100%;width:fit-content;white-space:pre-wrap;word-break:break-word;font-size:13.5px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.1)}
 .bubble b{font-weight:700}
 .bubble .ts{display:block;text-align:right;font-size:10.5px;opacity:.6;margin-top:2px}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .fmt{margin-top:10px;font-size:12px;color:var(--muted)}
-.fmt code{font-family:var(--f-mono);font-size:11.5px;background:var(--sunk);padding:1px 5px;border-radius:4px}
+code{font-family:var(--f-mono);font-size:11.5px;background:var(--sunk);padding:1px 5px;border-radius:4px}
+
+/* Tracker rows */
+.filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f label,.flabel{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+select,input[type=text],input[type=number],input[type=search]{font:inherit;font-size:13px;padding:6px 8px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);max-width:100%}
+.seg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--muted);padding:5px 10px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.exportbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--r);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,var(--surface))}
+.exportbar .cnt{font-weight:600;flex:1;min-width:180px}
+.exportbar .cnt small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-2px;border:1px solid var(--line)}
+
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface);position:sticky;top:0;z-index:1}
+th.r,td.r{text-align:right}
+td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+tr.isnew td{background:var(--new)}
+tr.cancel td{color:var(--muted)}
+tr.cancel td.nom{text-decoration:line-through}
+td.todo,td .todo{background:var(--todo)}
+td select,td input{font-size:12.5px;padding:3px 5px;border-radius:6px}
+td input.n{width:76px;text-align:right;font-variant-numeric:tabular-nums}
+td input.ref{width:96px}
+td input.sai{width:64px}
+td input.com{width:170px}
+td select.st{width:auto}
+td.nom{font-weight:600}
+.rowcopy{font:inherit;font-size:11.5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 7px;cursor:pointer}
+.rowcopy:hover{border-color:var(--accent)}
+.badge{font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:4px;white-space:nowrap}
+.badge.new{background:var(--good);color:var(--surface)}
+.badge.in{background:var(--sunk);color:var(--muted)}
+tfoot td{font-weight:600;border-bottom:0;border-top:1px solid var(--line)}
+.more{color:var(--muted);font-size:12.5px;margin:10px 0 0}
+details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-size:13px}
+.rategrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 16px;margin-top:10px}
+.rategrid label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px}
+.rategrid input{width:84px;text-align:right}
 
 /* Budget */
-#v-budget{display:flex;flex-direction:column;gap:18px}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 @media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .kpi .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
 .kpi .v{font-family:var(--f-display);font-size:24px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
 .kpi .v.neg{color:var(--crit)}
-.kpi input{font:inherit;font-family:var(--f-display);font-size:22px;font-weight:600;width:100%;max-width:170px;padding:2px 6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.kpi input{font-family:var(--f-display);font-size:21px;font-weight:600;width:100%;max-width:180px;padding:2px 6px}
 .stack{margin-top:16px}
 .stack .track{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--sunk)}
 .stack .track div{height:100%}
-.stack .keys{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.keys{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:12.5px;color:var(--muted)}
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-.team .row{display:flex;justify-content:space-between;font-size:13px}
-.team .row b{font-weight:600}
-.team .tr{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden;margin-top:4px}
-.team .tr div{height:100%;background:var(--accent);border-radius:4px}
-
-.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{border-collapse:collapse;width:100%;font-size:13px}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-th.r,td.r{text-align:right}
-td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
-tr:last-child td{border-bottom:0}
-tr.cancel td{color:var(--muted)}
-td input.real{font:inherit;font-size:13px;width:92px;padding:4px 6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
-td select{font:inherit;font-size:12.5px;padding:4px 6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
-.var.up{color:var(--crit)} .var.down{color:var(--good)}
-tfoot td{font-weight:600;border-top:1px solid var(--line);border-bottom:0}
-.seg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px}
-.seg button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--muted);padding:5px 10px;border-radius:6px;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.two{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:10.5px;font-family:var(--f-body)}
+.pivot td,.pivot th{font-size:13px;padding:7px 8px}
+.pivot tbody tr:hover td{background:var(--bg)}
+.gap.up{color:var(--crit)} .gap.down{color:var(--good)}
 
 /* Invoices */
 .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px}
 .inv{display:flex;flex-direction:column;gap:10px}
 .inv .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .inv .total{font-family:var(--f-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
-.inv ul{list-style:none;margin:0;padding:0;font-size:13px}
+.inv ul{list-style:none;margin:0;padding:0;font-size:13px;max-height:220px;overflow:auto}
 .inv li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line)}
-.inv li:last-child{border-bottom:0}
 .inv li span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .inv .miss{font-size:12px;color:var(--warn)}
 
-.prod{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.prod{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;margin:0}
 .prod b{color:var(--ink);font-weight:600}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;max-width:calc(100vw - 32px)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#copyBox{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:0 12px 32px rgba(0,0,0,.2);max-width:640px;margin:0 auto}
-#copyBox textarea{width:100%;height:180px;font-family:var(--f-mono);font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px}
-#copyBox .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#copyBox{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:0 12px 32px rgba(0,0,0,.2);max-width:720px;margin:0 auto}
+#copyBox textarea{width:100%;height:180px;font-family:var(--f-mono);font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px;white-space:pre}
+#copyBox .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
 </style>
 </head>
@@ -165,26 +204,40 @@ tfoot td{font-weight:600;border-top:1px solid var(--line);border-bottom:0}
 <div class="wrap">
   <header class="top">
     <div>
-      <div class="eyebrow">Merchandising · Model fittings</div>
+      <div class="eyebrow">RTW Development · Model fittings</div>
       <h1>Fittings Planner</h1>
-      <p class="lede">One calendar, three outputs: the WhatsApp planning message, the budget tracker, and invoices per agency.</p>
-    </div>
-    <div class="source">
-      <span id="srcPill" class="pill">Sample calendar</span>
-      <label class="btn primary" for="file">Load Outlook calendar</label>
-      <input id="file" class="vh" type="file" accept=".ics,text/calendar">
-      <button id="resetBtn" class="btn" type="button" hidden>Back to sample</button>
+      <p class="lede">The Outlook calendar becomes the WhatsApp planning message and new rows for the model tracker, in the tracker's own columns.</p>
     </div>
   </header>
-  <p class="note" id="note">Showing invented fittings. To try it on a real calendar, export it from Outlook as an .ics file and load it here. The file is read in your browser and is not uploaded anywhere.</p>
+
+  <section class="sources" aria-label="Data sources">
+    <div class="src" id="srcCal">
+      <span class="dot"></span>
+      <div class="txt"><b>Outlook calendar</b><span id="calInfo">Sample fittings</span></div>
+      <div class="acts">
+        <label class="btn small primary" for="calFile">Load .ics</label>
+        <input id="calFile" class="vh" type="file" accept=".ics,text/calendar">
+      </div>
+    </div>
+    <div class="src" id="srcTr">
+      <span class="dot"></span>
+      <div class="txt"><b>Model tracker (Excel)</b><span id="trInfo">Sample tracker</span></div>
+      <div class="acts">
+        <label class="btn small primary" for="trFile">Load tracker</label>
+        <input id="trFile" class="vh" type="file" accept=".xlsx,.xls,.xlsm">
+      </div>
+    </div>
+  </section>
+  <p class="note" id="note"></p>
 
   <div class="bar">
     <div class="tabs" role="tablist" aria-label="Views">
-      <button class="tab" role="tab" id="t-plan" aria-selected="true" data-tab="plan">Planning message</button>
-      <button class="tab" role="tab" id="t-budget" aria-selected="false" data-tab="budget">Budget tracker</button>
-      <button class="tab" role="tab" id="t-inv" aria-selected="false" data-tab="inv">Invoices <span class="ct" id="invCt"></span></button>
+      <button class="tab" role="tab" id="t-plan" data-tab="plan">Planning message</button>
+      <button class="tab" role="tab" id="t-rows" data-tab="rows">Tracker rows<span class="ct" id="newCt" hidden></span></button>
+      <button class="tab" role="tab" id="t-budget" data-tab="budget">Budget</button>
+      <button class="tab" role="tab" id="t-inv" data-tab="inv">Invoices</button>
     </div>
-    <div class="weeknav">
+    <div class="weeknav" id="weeknav">
       <button class="iconbtn" id="prevW" type="button" aria-label="Previous week">‹</button>
       <div class="lbl" id="weekLbl"></div>
       <button class="iconbtn" id="nextW" type="button" aria-label="Next week">›</button>
@@ -195,13 +248,13 @@ tfoot td{font-weight:600;border-top:1px solid var(--line);border-bottom:0}
   <!-- Planning -->
   <section id="v-plan" class="plan" role="tabpanel" aria-labelledby="t-plan">
     <div class="panel">
-      <div class="head"><div><h2>Fittings this week</h2><div class="sub">From the calendar. Click a status to change it.</div></div></div>
+      <div class="head"><div><h2>Fittings this week</h2><div class="sub">Click a status to change it. <span class="newtag">New</span> means the fitting is not in the tracker yet.</div></div></div>
       <div id="days"></div>
     </div>
     <div class="panel">
-      <div class="head"><div><h2>WhatsApp message</h2><div class="sub">Written in your planning format, ready to send.</div></div></div>
-      <div class="daychips" id="dayChips" role="group" aria-label="Which days to include"></div>
-      <label class="opt"><input type="checkbox" id="incTent" checked> Include tentative fittings</label>
+      <div class="head"><div><h2>WhatsApp message</h2><div class="sub">Written in the planning format, ready to send.</div></div></div>
+      <div class="daychips" id="dayChips" role="group" aria-label="Days to include"></div>
+      <label class="opt"><input type="checkbox" id="incTent" checked> Include options (not yet confirmed)</label>
       <div class="chat"><div class="bubble" id="bubble"></div></div>
       <div class="actions">
         <button class="btn primary" id="copyMsg" type="button">Copy message</button>
@@ -211,51 +264,82 @@ tfoot td{font-weight:600;border-top:1px solid var(--line);border-bottom:0}
     </div>
   </section>
 
-  <!-- Budget -->
-  <section id="v-budget" role="tabpanel" aria-labelledby="t-budget" hidden>
-    <div class="panel">
-      <div class="head"><div><h2>Season budget</h2><div class="sub" id="budgetSub"></div></div></div>
-      <div class="kpis">
-        <div class="kpi"><div class="k"><label for="budgetIn">Budget (€)</label></div><input id="budgetIn" type="number" min="0" step="1000" inputmode="numeric"></div>
-        <div class="kpi"><div class="k">Spent (real)</div><div class="v" id="kReal"></div></div>
-        <div class="kpi"><div class="k">Still planned (est.)</div><div class="v" id="kPlan"></div></div>
-        <div class="kpi"><div class="k">Left after planned</div><div class="v" id="kLeft"></div></div>
-      </div>
-      <div class="stack">
-        <div class="track" id="stack" role="img" aria-label="Budget used"></div>
-        <div class="keys" id="stackKeys"></div>
-      </div>
-      <div class="teams" id="teams"></div>
+  <!-- Tracker rows -->
+  <section id="v-rows" class="view" role="tabpanel" aria-labelledby="t-rows" hidden>
+    <div class="exportbar">
+      <div class="cnt" id="selCnt"></div>
+      <button class="btn primary" id="copySel" type="button">Copy rows for Excel</button>
+      <button class="btn" id="dlSel" type="button" hidden>Download .xlsx</button>
     </div>
     <div class="panel">
       <div class="head">
-        <div><h2>Tracker</h2><div class="sub">Rows come straight from the calendar. Fill in real costs as invoices arrive.</div></div>
-        <div class="tools">
-          <div class="seg" id="scopeSeg" role="group" aria-label="Rows to show">
-            <button type="button" data-s="week" aria-pressed="true">This week</button>
-            <button type="button" data-s="all" aria-pressed="false">Whole season</button>
-          </div>
-          <button class="btn small" id="copyTracker" type="button">Copy for Excel</button>
+        <div><h2>Tracker rows</h2><div class="sub" id="rowsSub"></div></div>
+        <div class="filters">
+          <div class="f"><label for="fShow">Show</label>
+            <div class="seg" id="fShow" role="group" aria-label="Rows to show">
+              <button type="button" data-v="new">Not in tracker</button>
+              <button type="button" data-v="all">All</button>
+            </div></div>
+          <div class="f"><label for="fMonth">Month</label><select id="fMonth"></select></div>
+          <div class="f"><label for="fAg">Agency</label><select id="fAg"></select></div>
+          <div class="f"><label for="fQ">Search</label><input type="search" id="fQ" placeholder="Model name"></div>
         </div>
       </div>
-      <div class="scroll"><table id="tracker"></table></div>
+      <div class="scroll"><table id="rows"></table></div>
+      <p class="more" id="rowsMore"></p>
+      <div class="legend"><span><i style="background:var(--new)"></i>Not in the tracker yet</span><span><i style="background:var(--todo)"></i>To complete (same blue as "A compléter" in the tracker)</span></div>
+      <details class="rates" style="margin-top:14px">
+        <summary>Day rates used for "Estimé"</summary>
+        <p class="sub">Full day for bookings over 3 hours, half day for 3 hours or less. Taken from the tracker when it is loaded. Changes apply to rows that are not in the tracker yet.</p>
+        <div class="rategrid" id="rates"></div>
+      </details>
+    </div>
+    <p class="prod"><b>How to paste:</b> in the tracker, open the 2026 sheet, click the first empty cell in column A, then paste (Cmd+V or Ctrl+V). Each row fills columns A to Y in the tracker's order. Année and Période are pasted as values, and the Finance columns (Q to V) are left empty for Finance.</p>
+  </section>
+
+  <!-- Budget -->
+  <section id="v-budget" class="view" role="tabpanel" aria-labelledby="t-budget" hidden>
+    <div class="panel">
+      <div class="head"><div><h2 id="budgetTitle">Budget</h2><div class="sub" id="budgetSub"></div></div></div>
+      <div class="kpis">
+        <div class="kpi"><div class="k"><label for="budgetIn">Year budget (€)</label></div><input id="budgetIn" type="number" min="0" step="1000" inputmode="numeric"></div>
+        <div class="kpi"><div class="k">Réel (invoiced)</div><div class="v" id="kReal"></div></div>
+        <div class="kpi"><div class="k">Estimé, no Réel yet</div><div class="v" id="kPlan"></div></div>
+        <div class="kpi"><div class="k">Left</div><div class="v" id="kLeft"></div></div>
+      </div>
+      <div class="stack"><div class="track" id="stack" role="img" aria-label="Budget used"></div><div class="keys" id="stackKeys"></div></div>
+    </div>
+    <div class="two">
+      <div class="panel">
+        <div class="head"><div><h2>Estimé vs Réel by month</h2><div class="sub">Confirmed fittings only.</div></div></div>
+        <div id="monthChart"></div>
+        <div class="keys"><span><span class="sw" style="background:color-mix(in srgb,var(--accent) 35%,var(--sunk))"></span>Estimé</span><span><span class="sw" style="background:var(--accent)"></span>Réel</span></div>
+      </div>
+      <div class="panel">
+        <div class="head"><div><h2>By agency</h2><div class="sub">Same view as the "Estimé VS Réel" sheet.</div></div><select id="pivMonth" aria-label="Month"></select></div>
+        <div class="scroll"><table class="pivot" id="pivot"></table></div>
+      </div>
     </div>
   </section>
 
   <!-- Invoices -->
-  <section id="v-inv" role="tabpanel" aria-labelledby="t-inv" hidden>
+  <section id="v-inv" class="view" role="tabpanel" aria-labelledby="t-inv" hidden>
     <div class="panel">
-      <div class="head"><div><h2>Ready to invoice</h2><div class="sub">Past fittings marked "To invoice", grouped by agency. Fittings without a real cost use the estimate.</div></div></div>
+      <div class="head"><div><h2>Waiting for an invoice reference</h2><div class="sub">Past confirmed fittings with no "Réf facture" yet, by agency.</div></div></div>
       <div class="inv-grid" id="invGrid"></div>
+    </div>
+    <div class="panel">
+      <div class="head"><div><h2>By invoice reference</h2><div class="sub">Same view as the "Analyse" sheet: total per reference, to check against the invoice.</div></div><input type="search" id="refQ" placeholder="Search reference or agency" aria-label="Search invoices"></div>
+      <div class="scroll"><table class="pivot" id="refTable"></table></div>
     </div>
   </section>
 
-  <p class="prod"><b>In the real version</b>, the planner would read Marie's Outlook calendar directly and add each new fitting to the tracker on SharePoint, so nothing is typed twice. That needs IT to approve access to Microsoft 365 (Graph API or Power Automate).</p>
+  <p class="prod"><b>In the real version</b>, the planner would read Marie's Outlook calendar and write new rows into the tracker on SharePoint directly, with no copy and paste. That needs IT to approve access to Microsoft 365 (Graph API or Power Automate).</p>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="copyBox" hidden>
-  <div class="row"><strong>Copy this text</strong><button class="btn small" id="copyClose" type="button">Close</button></div>
+  <div class="row"><strong>Copy this text, then paste it in Excel</strong><button class="btn small" id="copyClose" type="button">Close</button></div>
   <textarea id="copyText" readonly aria-label="Text to copy"></textarea>
 </div>
 
@@ -265,63 +349,103 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const eur = n => (n==null || n==='' || isNaN(n)) ? '–' : '€' + Math.round(n).toLocaleString('en-GB');
 const pad = n => String(n).padStart(2,'0');
-const hm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 const dayLbl = d => `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 const dkey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const frDate = d => `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
 const mondayOf = d => { const x = new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x; };
 const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const today0 = () => { const x = new Date(); x.setHours(0,0,0,0); return x; };
+// minutes <-> "10h", "9h30"
+const hfmt = m => m==null ? '' : `${Math.floor(m/60)}h${m%60 ? pad(m%60) : ''}`;
+function parseH(v){
+  if (v==null || v==='') return null;
+  if (typeof v === 'number'){ if (v < 1) return Math.round(v*1440); if (v <= 24) return Math.round(v*60); return null; }
+  const s = String(v).trim().toLowerCase().replace(/\s/g,'');
+  let m = s.match(/^(\d{1,2})(?:h|:)(\d{2})?(?::\d{2})?$/) || s.match(/^(\d{1,2})$/);
+  if (!m) return null;
+  return (+m[1])*60 + (m[2] ? +m[2] : 0);
+}
+const workMins = (a,b) => { if (a==null || b==null || b<=a) return null; let d = b-a; if (a < 13*60 && b > 14*60) d -= 60; return d; };
+const norm = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim();
+const CATS = ['WOVEN','KNITWEAR','LEATHER','VIP','ALL CATEGORY'];
+const GENRES = ['WRTW','MRTW','VIP'];
+const COLLS = ['PRECO','SHOW',"PAULA's",'ON RUN','VIP'];
+const TRACKER_HEAD = ['Nom ','Agence','Catégorie','WRTW / MRTW','Collection','SAISON','Localisation ','Date','Année','Période','Debut','Fin',"Nombre d'heures",'Estimé','Réel','Réf facture','ECART (Estimé vs Réel)','Réel Yooz','Réf Facture','Statut Yooz','Provision','check/comments','Commentaires','Heure supp','Annulé / Confirmé'];
+const inIframe = (() => { try { return window.self !== window.top; } catch(e){ return true; } })();
 
-/* ---------- Sample calendar (invented, placed around the current week) ---------- */
+/* ---------- Booking model ----------
+  {id, nom, agence, cat, genre, coll, saison, loc, date(Date), debut(min), fin(min), heures(min), estime, reel, ref, com, supp, st:'C'|'A'|'T', src:'tracker'|'calendar', isNew}
+*/
+let RATES = {};
+const rateFor = (ag, mins) => { const r = RATES[ag]; if (!r) return null; return (mins!=null && mins <= 180 && r.half) ? r.half : r.day; };
+
+/* ---------- Sample data (invented) ---------- */
 function makeSample(){
-  let a = 4417;
+  let a = 7203;
   const R = () => { a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
   const pick = arr => arr[Math.floor(R()*arr.length)];
-  const MODELS = [
-    {n:'Inès R.', ag:'Atlas Models', rate:260},{n:'Malik D.', ag:'Nord Agency', rate:240},{n:'Sofia L.', ag:'Atlas Models', rate:300},
-    {n:'Yuna K.', ag:'Lumen Management', rate:280},{n:'Elena M.', ag:'Rive Talent', rate:220},{n:'Theo B.', ag:'Nord Agency', rate:240},
-    {n:'Aïcha N.', ag:'Lumen Management', rate:320},{n:'Lucas V.', ag:'Rive Talent', rate:220}];
-  const PURPOSE = [['Fitting 1',2],['Fitting 2',2],['Fitting 2',1.5],['Fitting 3',1.5],['Lookbook fitting',3],['Casting',1]];
-  const LOC = ['Fitting room A','Fitting room B','Studio 4','Showroom'];
-  const TEAM = ['Womenswear RTW','Womenswear RTW','Menswear RTW','Accessories'];
-  const start = addDays(mondayOf(new Date()), -14);
-  const now = new Date(); const evs = [];
-  for (let w=0; w<4; w++) for (let d=0; d<5; d++){
-    const day = addDays(start, w*7+d);
-    const n = 1 + Math.floor(R()*3.2);
-    let hour = 9 + Math.floor(R()*2);
-    for (let i=0;i<n;i++){
-      const m = pick(MODELS), [purpose,h] = pick(PURPOSE);
-      const s = new Date(day); s.setHours(hour, R()<.3?30:0, 0, 0);
-      const e = new Date(s.getTime() + h*3.6e6);
-      hour = e.getHours() + 1 + Math.floor(R()*2); if (hour > 17) break;
-      const past = e < now;
-      const status = R()<.07 ? 'Cancelled' : (!past && R()<.2 ? 'Tentative' : 'Confirmed');
-      const rate = purpose==='Lookbook fitting' ? Math.round(m.rate*1.4) : m.rate;
-      const ev = {id:'s'+evs.length, start:s, end:e, name:m.n, agency:m.ag, rate, purpose, location:pick(LOC), team:pick(TEAM), status, real:'', inv:'To invoice'};
-      const est = rate*h;
-      if (past){
-        if (status==='Cancelled') ev.real = R()<.5 ? Math.round(est*.5) : 0;
-        else { const r = R(); ev.real = r<.2 ? est + rate : r<.3 ? est + rate*.5 : est; }
-        const age = (now - e)/864e5;
-        ev.inv = age > 10 ? (R()<.6 ? 'Paid' : 'Invoiced') : 'To invoice';
-        if (status==='Cancelled' && ev.real===0) ev.inv = 'Not billable';
-        if (age < 3 && R()<.5) ev.real = '';
-      } else ev.inv = '—';
-      evs.push(ev);
+  const wpick = arr => { const t = arr.reduce((s,x)=>s+x[1],0); let r = R()*t; for (const x of arr){ if ((r-=x[1]) < 0) return x[0]; } return arr[0][0]; };
+  const AG = [['Atlas Models',1400,600,6],['Nord Agency',1500,650,2],['Lumen Management',1470,630,2],['Rive Talent',1450,600,1.5],['Kite Models',1400,600,1],['Orbit Faces',1500,700,1]];
+  const rates = {}; AG.forEach(x => rates[x[0]] = {day:x[1], half:x[2]});
+  const FN = ['Léa','Sacha','Inès','Malik','Yuna','Theo','Aïcha','Lucas','Elena','Noah','Maya','Iris','Oskar','Sofia','Jonas','Amara','Liv','Hugo','Nadia','Felix','Zoé','Tom','Alba','Ruben','Mila','Kofi','Ines','Paul','Lena','Arno','Nina','Yann','Clara','Emil','Sara','Leo','Ada','Max','Rosa','Iva'];
+  const LN = ['MORAND','VIDAL','ROSSI','DIALLO','KIM','BERGER','NAVARRO','LINDQVIST','PETIT','OKAFOR','MARCHETTI','HOLM','DUARTE','SATO','VOGEL','AUBRY','FERRAND','NIELSEN','COSTA','LAMBERT'];
+  const models = FN.map((f,i) => ({nom:`${f} ${LN[(i*7)%LN.length]}`, agence: wpick(AG.map(x=>[x[0],x[3]])), genre: i%5<3 ? 'WRTW' : 'MRTW'}));
+  const SLOTS = [[[600,1080],55],[[600,1140],12],[[840,1080],12],[[600,780],10],[[600,720],6],[[570,1080],5]];
+  const start = new Date(2026,0,5), end = addDays(mondayOf(new Date()), 25), now = today0();
+  const out = []; let n = 0;
+  for (let d = new Date(start); d <= end; d = addDays(d,1)){
+    const dow = d.getDay(); if (dow===0 || dow===6) continue;
+    const m = d.getMonth(); const peak = [0,1,5,6,8,9].includes(m) ? 1.6 : 0.8;
+    const k = Math.round(R()*5*peak);
+    const used = new Set();
+    for (let i=0;i<k;i++){
+      let mo = pick(models), tries = 0; while (used.has(mo.nom) && tries++ < 10) mo = pick(models); used.add(mo.nom);
+      const [dt, fn] = wpick(SLOTS);
+      const hrs = workMins(dt, fn);
+      const coll = wpick([['PRECO',42],['SHOW',41],["PAULA's",12],['ON RUN',3],['VIP',2]]);
+      const cat = coll==='VIP' ? 'VIP' : wpick([['WOVEN',66],['KNITWEAR',17],['LEATHER',12],['ALL CATEGORY',2]]);
+      const saison = coll==='VIP' ? 'VIP' : (m<4 ? (coll==='PRECO'?'SS27':'FW26') : m<9 ? (coll==='SHOW'?'FW27':'SS27') : (coll==='PRECO'?'FW27':'SS28'));
+      const com = coll==="PAULA's" ? pick(["Paula's post fitting knitwear","Paula's Ibiza merch fitting"]) : wpick([['Post fitting',60],['Pre fitting',15],['Post fitting woven, jersey & denim',9],['Casting',6],['Lookbook fitting',5],['Show fitting',5]]);
+      const past = d < now;
+      const st = (!past && R() < .15) ? 'T' : (R() < .03 ? 'A' : 'C');
+      const r = rates[mo.agence]; const est = st==='A' ? 0 : (hrs <= 180 ? r.half : r.day);
+      const b = {id:'s'+(n++), nom:mo.nom, agence:mo.agence, cat, genre: cat==='VIP'?'VIP':mo.genre, coll, saison, loc:'SCRIBE', date:new Date(d), debut:dt, fin:fn, heures:hrs, estime:est, reel:'', ref:'', com, supp:'', st};
+      out.push(b);
     }
   }
-  return evs;
+  // Invoices: past rows older than ~3 weeks get Réel + Réf facture grouped by agency and month
+  const refs = {}; let refN = 30100, refF = 1;
+  out.forEach(b => {
+    const age = (now - b.date)/864e5;
+    if (age < 1 || b.st==='T') return;
+    if (b.st==='A'){ b.reel = 0; return; }
+    if (age > 12 || R() < .5){
+      const x = R(); b.reel = x < .07 ? b.estime + 200 : x < .1 ? b.estime + 400 : x < .16 ? Math.round(b.estime*0.57/10)*10 : b.estime;
+      if (b.reel > b.estime) b.supp = b.reel - b.estime;
+    }
+    if (age > 21 && b.reel !== ''){
+      const key = b.agence + b.date.getMonth();
+      refs[key] ||= (['Atlas Models','Kite Models'].includes(b.agence) ? String(990000 + (refN++)) : `F2026${pad(b.date.getMonth()+1)}${pad(refF++)}`);
+      b.ref = refs[key];
+    }
+  });
+  // Tracker = rows up to last Wednesday; calendar = rows from last Monday
+  const lastMon = addDays(mondayOf(new Date()), -7), cut = addDays(lastMon, 3);
+  const tracker = out.filter(b => b.date < cut).map(b => ({...b, src:'tracker'}));
+  const calendar = out.filter(b => b.date >= lastMon).map(b => ({...b, id:'c'+b.id, src:'calendar', reel:'', ref:'', supp:''}));
+  return {tracker, calendar, rates, budget: 1200000};
 }
 
-/* ---------- Outlook .ics reader ---------- */
+/* ---------- Outlook .ics ---------- */
 function parseICS(text){
   const lines = text.replace(/\r\n/g,'\n').replace(/\n[ \t]/g,'').split('\n');
   const evs = []; let cur = null;
   const unesc = v => v.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
-  const parseDate = (params, v) => {
-    if (/VALUE=DATE(?!-)/.test(params) || /^\d{8}$/.test(v)) return null;
+  const pd = (p, v) => {
+    if (/VALUE=DATE(?!-)/.test(p) || /^\d{8}$/.test(v)) return null;
     const m = v.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/); if (!m) return null;
     return m[7] ? new Date(Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5],+m[6])) : new Date(+m[1],m[2]-1,+m[3],+m[4],+m[5],+m[6]);
   };
@@ -330,185 +454,347 @@ function parseICS(text){
     if (ln === 'END:VEVENT'){ if (cur) evs.push(cur); cur = null; continue; }
     if (!cur) continue;
     const i = ln.indexOf(':'); if (i < 0) continue;
-    const left = ln.slice(0,i), v = ln.slice(i+1); const [key, ...params] = left.split(';'); const p = params.join(';');
+    const [key, ...ps] = ln.slice(0,i).split(';'); const p = ps.join(';'); const v = ln.slice(i+1);
     if (key==='SUMMARY') cur.summary = unesc(v);
     else if (key==='LOCATION') cur.location = unesc(v);
     else if (key==='DESCRIPTION') cur.desc = unesc(v);
-    else if (key==='CATEGORIES') cur.cat = unesc(v).split(',')[0];
-    else if (key==='DTSTART') cur.start = parseDate(p, v);
-    else if (key==='DTEND') cur.end = parseDate(p, v);
+    else if (key==='CATEGORIES') cur.cat = unesc(v);
+    else if (key==='DTSTART') cur.start = pd(p, v);
+    else if (key==='DTEND') cur.end = pd(p, v);
     else if (key==='STATUS') cur.status = v;
     else if (key==='X-MICROSOFT-CDO-BUSYSTATUS') cur.busy = v;
-    else if (key==='UID') cur.uid = v;
   }
-  const PURP = /(fitting|essayage|prueba|casting|lookbook|showroom|try[- ]?on)/i;
-  const field = (desc, re) => { const m = (desc||'').match(re); return m ? m[1].trim() : ''; };
+  const PURP = /(post[- ]?fitting|pre[- ]?fitting|fitting|essayage|casting|lookbook|showroom|show)/i;
+  const field = (t, labels) => { for (const l of labels){ const m = t.match(new RegExp('(?:^|\\n)\\s*' + l + '\\s*[:=]\\s*([^\\n]+)', 'i')); if (m) return m[1].trim(); } return ''; };
   return evs.filter(e => e.start).map((e,idx) => {
+    const all = [e.summary, e.desc, e.cat].filter(Boolean).join('\n');
     const parts = (e.summary||'').split(/\s*(?:>|–|—|\||:| - )\s*/).filter(Boolean);
-    let purpose = parts.find(x => PURP.test(x)) || '';
-    let name = parts.find(x => x !== purpose) || e.summary || '(no title)';
+    const purpose = parts.find(x => PURP.test(x)) || field(all, ['Objet','Purpose','Commentaires?']) || '';
+    const nom = field(all, ['Nom','Model','Mannequin']) || parts.find(x => x !== purpose && !/^(WRTW|MRTW)$/i.test(x)) || e.summary || '';
     const end = e.end || new Date(e.start.getTime() + 3.6e6);
-    const rateTxt = field(e.desc, /rate\s*[:=]\s*€?\s*([\d.,]+)/i);
-    return {
-      id: 'i' + idx + '-' + (e.uid||'').slice(0,12), start:e.start, end, name, purpose: purpose || 'Meeting',
-      location: e.location || '', team: e.cat || field(e.desc, /team\s*[:=]\s*([^\n]+)/i),
-      agency: field(e.desc, /agency\s*[:=]\s*([^\n]+)/i) || 'No agency set',
-      rate: rateTxt ? parseFloat(rateTxt.replace(',','.')) : DEFAULT_RATE,
-      status: e.status==='CANCELLED' ? 'Cancelled' : (e.status==='TENTATIVE' || e.busy==='TENTATIVE') ? 'Tentative' : 'Confirmed',
-      real:'', inv: end < new Date() ? 'To invoice' : '—'
-    };
-  }).sort((a,b) => a.start - b.start);
+    const date = new Date(e.start); date.setHours(0,0,0,0);
+    const debut = e.start.getHours()*60 + e.start.getMinutes(), fin = end.getHours()*60 + end.getMinutes();
+    const up = all.toUpperCase();
+    const agence = field(all, ['Agence','Agency']);
+    const cat = field(all,['Catégorie','Categorie','Category']).toUpperCase() || CATS.find(c => up.includes(c)) || '';
+    const genre = (up.match(/\b(WRTW|MRTW)\b/)||[])[1] || '';
+    const coll = field(all,['Collection']) || (up.includes('PAULA') ? "PAULA's" : up.match(/\bPRECO\b/) ? 'PRECO' : up.match(/\bSHOW\b/) ? 'SHOW' : '');
+    const saison = (field(all,['Saison','Season']) || (up.match(/\b((?:SS|FW|PF|AW)\d{2})\b/)||[])[1] || '').toUpperCase();
+    const hrs = workMins(debut, fin);
+    const tarif = field(all, ['Tarif','Rate','Estimé','Estime']);
+    const st = e.status==='CANCELLED' ? 'A' : (e.status==='TENTATIVE' || e.busy==='TENTATIVE') ? 'T' : 'C';
+    return {id:'i'+idx, nom:nom.trim(), agence, cat, genre, coll, saison, loc:e.location||'', date, debut, fin, heures:hrs,
+            estime: tarif ? parseFloat(tarif.replace(/[^\d.,]/g,'').replace(',','.')) : '', reel:'', ref:'', com: purpose, supp:'', st, src:'calendar'};
+  }).sort((a,b) => a.date - b.date || a.debut - b.debut);
 }
-const DEFAULT_RATE = 250;
+
+/* ---------- Tracker .xlsx ---------- */
+function parseTracker(wb){
+  const year = String(new Date().getFullYear());
+  let best = null;
+  for (const name of wb.SheetNames){
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, raw:true, defval:null, blankrows:false});
+    for (let i=0;i<Math.min(rows.length,30);i++){
+      const h = (rows[i]||[]).map(x => norm(x));
+      if (h.includes('nom') && h.includes('agence')){
+        const score = (name.trim()===year ? 1e6 : /^20\d\d$/.test(name.trim()) ? 5e5 : 0) + rows.length;
+        if (!best || score > best.score) best = {name, rows, hi:i, score};
+        break;
+      }
+    }
+  }
+  if (!best) return null;
+  const head = best.rows[best.hi].map(x => norm(x));
+  const col = (...names) => { for (const n of names){ const i = head.indexOf(n); if (i >= 0) return i; } return -1; };
+  const C = {nom:col('nom'), ag:col('agence'), cat:col('categorie'), genre:col('wrtw mrtw'), coll:col('collection'), sai:col('saison'), loc:col('localisation'),
+    date:col('date'), deb:col('debut','début'), fin:col('fin'), h:col('nombre d heures'), est:col('estime'), reel:col('reel'), ref:col('ref facture'), com:col('commentaires'),
+    supp:col('heure supp','heures supp'), st:col('annule confirme')};
+  const v = (r,i) => i>=0 ? r[i] : null;
+  const toDate = x => {
+    if (x==null || x==='') return null;
+    if (typeof x === 'number'){ const u = new Date(Math.round((x-25569)*864e5)); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); }
+    const m = String(x).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if (m) return new Date(m[3].length===2 ? 2000+ +m[3] : +m[3], m[2]-1, +m[1]);
+    return null;
+  };
+  const num = x => (x==null || x==='' || isNaN(+x)) ? '' : +x;
+  const out = [];
+  for (let i = best.hi+1; i < best.rows.length; i++){
+    const r = best.rows[i]; if (!r) continue;
+    const nom = String(v(r,C.nom) ?? '').trim(); if (!nom) continue;
+    const date = toDate(v(r,C.date));
+    const debut = parseH(v(r,C.deb)), fin = parseH(v(r,C.fin));
+    const stRaw = String(v(r,C.st) ?? '').trim().toUpperCase();
+    out.push({id:'t'+i, row:i+1, nom, agence:String(v(r,C.ag)??'').trim(), cat:String(v(r,C.cat)??'').trim(), genre:String(v(r,C.genre)??'').trim(),
+      coll:String(v(r,C.coll)??'').trim(), saison:String(v(r,C.sai)??'').trim(), loc:String(v(r,C.loc)??'').trim(), date, debut, fin,
+      heures: parseH(v(r,C.h)) ?? workMins(debut,fin), estime:num(v(r,C.est)), reel:num(v(r,C.reel)), ref: v(r,C.ref)==null ? '' : String(v(r,C.ref)).trim(),
+      com:String(v(r,C.com)??'').trim(), supp:num(v(r,C.supp)), st: stRaw==='A' ? 'A' : 'C', src:'tracker'});
+  }
+  // budget from any sheet: "BUDGET ANNEE 2026 = 500 000"
+  let budget = null;
+  for (const name of wb.SheetNames){
+    const ws = wb.Sheets[name];
+    for (const k in ws){ if (k[0]==='!') continue; const t = String(ws[k].v ?? ''); const m = t.match(/budget[^=\d]*(?:20\d\d)?\s*[=:]\s*([\d\s.,]+)/i); if (m){ budget = +m[1].replace(/[\s.,]/g,''); break; } }
+    if (budget) break;
+  }
+  // day rates: most common Estimé per agency, full (>3h) and half (<=3h)
+  const tally = {};
+  out.forEach(b => { if (!b.agence || !(b.estime > 0) || b.st==='A') return; const k = (b.heures!=null && b.heures <= 180) ? 'half' : 'day'; ((tally[b.agence] ||= {day:{},half:{}})[k][b.estime] = (tally[b.agence]?.[k]?.[b.estime]||0) + 1); });
+  const rates = {};
+  for (const ag in tally){ const top = o => +Object.entries(o).sort((a,b)=>b[1]-a[1])[0]?.[0] || null; const d = top(tally[ag].day); rates[ag] = {day: d || top(tally[ag].half), half: top(tally[ag].half)}; if (rates[ag].half && rates[ag].half >= rates[ag].day) rates[ag].half = null; }
+  return {rows: out, sheet: best.name, budget, rates};
+}
 
 /* ---------- State ---------- */
-let EV = [];
-const S = {tab:'plan', week: mondayOf(new Date()), days:null, incTent:true, scope:'week', budget:25000, source:null};
-const STORE = 'fittings-planner-v1';
+const S = {tab:'plan', week: mondayOf(new Date()), days:null, incTent:true, show:'new', month:'all', ag:'all', q:'', pivMonth:'all', refQ:'',
+  budget:1200000, calName:null, trName:null, cal:[], tr:[], sel:new Set(), selTouched:false, cap:150};
+let ALL = [];
+const STORE = 'fittings-planner-v2';
 function saveEdits(){
-  if (S.source) return;
-  try { localStorage.setItem(STORE, JSON.stringify({budget:S.budget, ev:Object.fromEntries(EV.map(e => [e.id,{real:e.real,inv:e.inv,status:e.status}]))})); } catch(e){}
+  if (S.calName || S.trName) return;
+  try { localStorage.setItem(STORE, JSON.stringify({budget:S.budget, rates:RATES, ev:Object.fromEntries(S.cal.map(b => [b.id, pick(b)]))})); } catch(e){}
 }
+const EDIT = ['nom','agence','cat','genre','coll','saison','loc','estime','reel','ref','com','supp','st'];
+const pick = b => Object.fromEntries(EDIT.map(k => [k, b[k]]));
 function loadEdits(){
   try { const d = JSON.parse(localStorage.getItem(STORE)||'null'); if (!d) return;
-    if (d.budget) S.budget = d.budget;
-    EV.forEach(e => { const x = d.ev && d.ev[e.id]; if (x) Object.assign(e, x); });
+    if (d.budget) S.budget = d.budget; if (d.rates) RATES = d.rates;
+    S.cal.forEach(b => { const x = d.ev && d.ev[b.id]; if (x) Object.assign(b, x); });
   } catch(e){}
 }
-const hours = e => (e.end - e.start)/3.6e6;
-const est = e => e.status==='Cancelled' ? 0 : e.rate*hours(e);
-const isPast = e => e.end < new Date();
-const cost = e => e.real!=='' && e.real!=null ? +e.real : (isPast(e) ? est(e) : est(e));
-const inWeek = e => e.start >= S.week && e.start < addDays(S.week,7);
 
-function setData(evs, source){
-  EV = evs; S.source = source; S.week = mondayOf(new Date()); S.days = null; S.budget = 25000;
-  if (!source) loadEdits();
-  if (source && EV.length && !EV.some(inWeek)) S.week = mondayOf(EV.find(e => e.start >= new Date())?.start || EV[EV.length-1].start);
-  $('srcPill').textContent = source ? `${source} · ${EV.length} events` : 'Sample calendar';
-  $('srcPill').classList.toggle('real', !!source);
-  $('resetBtn').hidden = !source;
-  $('note').textContent = source
-    ? `Read from your file in this browser. Purpose comes from the event title, team from the Outlook category, agency and rate from "Agency:" and "Rate:" lines in the event notes (default €${DEFAULT_RATE}/h).`
-    : 'Showing invented fittings. To try it on a real calendar, export it from Outlook as an .ics file and load it here. The file is read in your browser and is not uploaded anywhere.';
-  render();
+function sameBooking(c, t){
+  if (!c.date || !t.date || dkey(c.date) !== dkey(t.date)) return false;
+  const a = norm(c.nom), b = norm(t.nom); if (!a || !b) return false;
+  if (a === b) return true;
+  const A = a.split(' '), B = b.split(' ');
+  if (A[0] !== B[0]) return false;
+  if (A.length===1 || B.length===1) return true;
+  return A[A.length-1][0] === B[B.length-1][0];
+}
+function rebuild(){
+  const byDay = {};
+  S.tr.forEach(t => { if (t.date) (byDay[dkey(t.date)] ||= []).push(t); });
+  S.cal.forEach(c => { c.isNew = !(byDay[c.date ? dkey(c.date) : ''] || []).some(t => sameBooking(c,t)); });
+  ALL = [...S.tr.map(t => ({...t, isNew:false})), ...S.cal.filter(c => c.isNew)].sort((a,b) => (a.date||0) - (b.date||0) || (a.debut??0) - (b.debut??0));
+  ALL.forEach(b => { if (b.src==='tracker') b._ref = S.tr.find(t => t.id===b.id); });
+  if (!S.selTouched) S.sel = new Set(S.cal.filter(c => c.isNew && c.st !== 'T').map(c => c.id));
+}
+const byId = id => S.cal.find(b => b.id===id) || S.tr.find(b => b.id===id);
+const rowsAll = () => ALL;
+
+function setNote(){
+  const real = S.calName || S.trName;
+  $('note').textContent = real
+    ? 'Files are read in this browser and are not uploaded anywhere. Reload the page to clear them. Edits made here are not saved; copy or download the rows when you are done.'
+    : 'Showing invented fittings and an invented tracker. Load Marie’s Outlook calendar (.ics) and the model tracker (.xlsx) to use real data. Both are read in this browser and not uploaded.';
+  $('srcCal').classList.toggle('real', !!S.calName); $('srcTr').classList.toggle('real', !!S.trName);
+  $('calInfo').textContent = S.calName ? `${S.calName} · ${S.cal.length} events` : `Sample fittings · ${S.cal.length} events`;
+  $('trInfo').textContent = S.trName ? `${S.trName} · ${S.tr.length} rows` : `Sample tracker · ${S.tr.length} rows`;
 }
 
 /* ---------- Render ---------- */
 function render(){
-  const we = addDays(S.week, 4);
-  $('weekLbl').textContent = `${S.week.getDate()} ${MONTHS[S.week.getMonth()]} – ${we.getDate()} ${MONTHS[we.getMonth()]}`;
-  ['plan','budget','inv'].forEach(t => { $('v-'+t).hidden = S.tab!==t; $('t-'+t).setAttribute('aria-selected', S.tab===t); });
-  const toInv = EV.filter(e => isPast(e) && e.inv==='To invoice');
-  $('invCt').textContent = toInv.length ? toInv.length : '';
-  if (S.tab==='plan') renderPlan(); else if (S.tab==='budget') renderBudget(); else renderInv();
+  ['plan','rows','budget','inv'].forEach(t => { $('v-'+t).hidden = S.tab!==t; $('t-'+t).setAttribute('aria-selected', S.tab===t); });
+  $('weeknav').style.visibility = S.tab==='plan' ? 'visible' : 'hidden';
+  const nNew = S.cal.filter(c => c.isNew).length;
+  $('newCt').hidden = !nNew; $('newCt').textContent = nNew;
+  if (S.tab==='plan') renderPlan(); else if (S.tab==='rows') renderRows(); else if (S.tab==='budget') renderBudget(); else renderInv();
 }
 
 function weekDays(){
   const out = [];
-  for (let i=0;i<7;i++){ const d = addDays(S.week,i); const evs = EV.filter(e => dkey(e.start)===dkey(d)); if (i<5 || evs.length) out.push({d, evs}); }
+  for (let i=0;i<7;i++){ const d = addDays(S.week,i); const evs = ALL.filter(e => e.date && dkey(e.date)===dkey(d)); if (i<5 || evs.length) out.push({d, evs}); }
   return out;
 }
+const team = b => [b.genre, b.cat ? b.cat.charAt(0) + b.cat.slice(1).toLowerCase() : ''].filter(Boolean).join(' ');
+const stLbl = {C:'Confirmed', T:'Option', A:'Cancelled'};
 function renderPlan(){
+  const we = addDays(S.week, 4);
+  $('weekLbl').textContent = `${S.week.getDate()} ${MONTHS[S.week.getMonth()]} – ${we.getDate()} ${MONTHS[we.getMonth()]}`;
   const wd = weekDays();
-  $('days').innerHTML = wd.map(({d,evs}) => `
-    <div class="day"><h3>${dayLbl(d)}<span>${evs.filter(e=>e.status!=='Cancelled').length} fitting${evs.filter(e=>e.status!=='Cancelled').length===1?'':'s'}</span></h3>
-    ${evs.length ? evs.map(e => `
-      <div class="ev${e.status==='Cancelled'?' cancel':''}">
-        <div class="t">${hm(e.start)}–${hm(e.end)}</div>
-        <div><div class="who">${esc(e.name)}</div><div class="meta"><span>${esc(e.purpose)}</span>${e.location?`<span>${esc(e.location)}</span>`:''}${e.team?`<span>${esc(e.team)}</span>`:''}</div></div>
-        <button type="button" class="status ${e.status}" data-id="${esc(e.id)}" title="Change status">${e.status}</button>
-      </div>`).join('') : '<div class="empty">No fittings</div>'}
-    </div>`).join('');
-
+  $('days').innerHTML = wd.map(({d,evs}) => {
+    const live = evs.filter(e=>e.st!=='A').length;
+    return `<div class="day"><h3>${dayLbl(d)}<span>${live} fitting${live===1?'':'s'}</span></h3>
+    ${evs.length ? evs.map(e => `<div class="ev${e.st==='A'?' cancel':''}">
+        <div class="t">${hfmt(e.debut)}–${hfmt(e.fin)}</div>
+        <div><div class="who">${esc(e.nom)}${e.isNew?'<span class="newtag">New</span>':''}</div><div class="meta"><span>${esc(e.com||'—')}</span>${e.loc?`<span>${esc(e.loc)}</span>`:''}${team(e)?`<span>${esc(team(e))}</span>`:''}${e.agence?`<span>${esc(e.agence)}</span>`:''}</div></div>
+        <button type="button" class="status ${e.st}" data-id="${esc(e.id)}" title="Change status">${stLbl[e.st]}</button>
+      </div>`).join('') : '<div class="empty">No fittings</div>'}</div>`;
+  }).join('');
   const withEv = wd.filter(x => x.evs.length);
-  if (!S.days) { const t = dkey(new Date()); const nextDay = withEv.find(x => dkey(x.d) > t) || withEv.find(x => dkey(x.d)===t); S.days = nextDay ? [dkey(nextDay.d)] : withEv.map(x=>dkey(x.d)); }
+  if (!S.days){ const t = dkey(new Date()); const nx = withEv.find(x => dkey(x.d) > t) || withEv.find(x => dkey(x.d)===t); S.days = nx ? [dkey(nx.d)] : withEv.map(x=>dkey(x.d)); }
   const all = withEv.length && withEv.every(x => S.days.includes(dkey(x.d)));
-  $('dayChips').innerHTML = `<button type="button" class="daychip" data-day="all" aria-pressed="${all}">Whole week</button>` +
+  $('dayChips').innerHTML = `<button type="button" class="daychip" data-day="all" aria-pressed="${!!all}">Whole week</button>` +
     wd.map(({d,evs}) => `<button type="button" class="daychip" data-day="${dkey(d)}" aria-pressed="${!all && S.days.includes(dkey(d))}" ${evs.length?'':'disabled'}>${DAYS[d.getDay()]} ${d.getDate()}</button>`).join('');
   $('incTent').checked = S.incTent;
   const msg = buildMsg(wd);
-  $('bubble').innerHTML = msg ? esc(msg).replace(/\*([^*\n]+)\*/g,'<b>$1</b>') + `<span class="ts">${hm(new Date())}</span>` : '<span style="opacity:.7">No fittings in the selected days.</span>';
+  $('bubble').innerHTML = msg ? esc(msg).replace(/\*([^*\n]+)\*/g,'<b>$1</b>') + `<span class="ts">${hfmt(new Date().getHours()*60+new Date().getMinutes()).replace('h',':').replace(/:$/,':00')}</span>` : '<span style="opacity:.7">No fittings in the selected days.</span>';
   $('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
   $('copyMsg').disabled = !msg;
 }
 function buildMsg(wd){
   const blocks = [];
   wd.filter(x => S.days.includes(dkey(x.d))).forEach(({d,evs}) => {
-    const ok = evs.filter(e => e.status==='Confirmed' || (S.incTent && e.status==='Tentative'));
+    const ok = evs.filter(e => e.st==='C' || (S.incTent && e.st==='T'));
     if (!ok.length) return;
-    blocks.push(`*Planning – ${dayLbl(d)}*\n` + ok.map(e =>
-      [e.name, `${hm(e.start)}–${hm(e.end)}`, e.purpose + (e.status==='Tentative'?' (TBC)':''), e.location||'TBC', e.team||'TBC'].join(' > ')).join('\n'));
+    blocks.push(`*Planning – ${dayLbl(d)}*\n` + ok.map(e => [e.nom, `${hfmt(e.debut)}–${hfmt(e.fin)}`, (e.com||'Fitting') + (e.st==='T'?' (option)':''), e.loc||'TBC', team(e)||'TBC'].join(' > ')).join('\n'));
   });
   return blocks.join('\n\n');
 }
 
+function monthsAvailable(){ const s = new Set(ALL.filter(b=>b.date).map(b => b.date.getFullYear()*100 + b.date.getMonth())); return [...s].sort((a,b)=>a-b); }
+function filtered(){
+  const q = norm(S.q);
+  return ALL.filter(b => (S.show==='all' || b.isNew) &&
+    (S.month==='all' || (b.date && (b.date.getFullYear()*100+b.date.getMonth()) === +S.month)) &&
+    (S.ag==='all' || b.agence===S.ag) && (!q || norm(b.nom).includes(q)));
+}
+const opt = (list, val) => { const L = list.includes(val) || !val ? list : [val, ...list]; return `<option value="">—</option>` + L.map(x => `<option ${x===val?'selected':''}>${esc(x)}</option>`).join(''); };
+function renderRows(){
+  const months = monthsAvailable();
+  $('fMonth').innerHTML = `<option value="all">All months</option>` + months.map(m => `<option value="${m}" ${String(m)===String(S.month)?'selected':''}>${MOIS[m%100]} ${Math.floor(m/100)}</option>`).join('');
+  const ags = [...new Set(ALL.map(b=>b.agence).filter(Boolean))].sort();
+  $('fAg').innerHTML = `<option value="all">All agencies</option>` + ags.map(a => `<option ${a===S.ag?'selected':''}>${esc(a)}</option>`).join('');
+  document.querySelectorAll('#fShow button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v===S.show));
+  $('fQ').value = S.q;
+
+  const rows = filtered();
+  const nNew = S.cal.filter(c=>c.isNew).length;
+  $('rowsSub').textContent = S.show==='new'
+    ? `${nNew} fitting${nNew===1?'':'s'} from the calendar are not in the tracker yet. Check the blue cells, then copy them.`
+    : `${S.tr.length} rows from the tracker and ${nNew} new from the calendar.`;
+  const sel = [...S.sel].map(byId).filter(Boolean);
+  $('selCnt').innerHTML = `${sel.length} row${sel.length===1?'':'s'} selected<small>${sel.length ? 'Copy them, then paste in column A of the first empty row of the tracker.' : 'Tick rows in the table to export them.'}</small>`;
+  $('copySel').disabled = !sel.length; $('dlSel').hidden = inIframe; $('dlSel').disabled = !sel.length;
+
+  if (!rows.length){ $('rows').innerHTML = `<tr><td class="empty">${S.show==='new' ? 'Every calendar fitting is already in the tracker.' : 'No rows match these filters.'}</td></tr>`; $('rowsMore').textContent=''; renderRates(); return; }
+  const shown = rows.slice(-S.cap);
+  const allSel = shown.every(b => S.sel.has(b.id));
+  const td = (b, key, inner, todo) => `<td class="${todo && (b[key]==='' || b[key]==null) && b.st!=='A' ? 'todo' : ''}">${inner}</td>`;
+  let h = `<thead><tr><th><input type="checkbox" id="selAll" aria-label="Select all shown" ${allSel?'checked':''}></th><th></th><th>Statut</th><th>Date</th><th>Nom</th><th>Agence</th><th>Catégorie</th><th>WRTW / MRTW</th><th>Collection</th><th>Saison</th><th>Lieu</th><th>Début</th><th>Fin</th><th class="r">Heures</th><th class="r">Estimé</th><th class="r">Heure supp</th><th class="r">Réel</th><th>Réf facture</th><th>Commentaires</th><th></th></tr></thead><tbody>`;
+  for (const b of shown){
+    const ed = b.src==='calendar';
+    const dis = ed ? '' : 'disabled';
+    const i = (k, cls, type='text') => `<input class="${cls}" type="${type}" data-k="${k}" data-id="${esc(b.id)}" value="${esc(b[k]??'')}" ${dis} aria-label="${k}">`;
+    const s = (k, list) => `<select data-k="${k}" data-id="${esc(b.id)}" ${dis} aria-label="${k}">${opt(list, b[k])}</select>`;
+    h += `<tr class="${b.isNew?'isnew':''} ${b.st==='A'?'cancel':''}">
+      <td><input type="checkbox" class="sel" data-id="${esc(b.id)}" ${S.sel.has(b.id)?'checked':''} aria-label="Select ${esc(b.nom)}"></td>
+      <td>${b.isNew?'<span class="badge new">New</span>':`<span class="badge in" title="Row ${b.row||''} in the tracker">In tracker</span>`}</td>
+      <td><select class="st" data-k="st" data-id="${esc(b.id)}" ${dis} aria-label="Statut"><option value="C" ${b.st==='C'?'selected':''}>C</option><option value="A" ${b.st==='A'?'selected':''}>A</option>${b.st==='T'||ed?`<option value="T" ${b.st==='T'?'selected':''}>Option</option>`:''}</select></td>
+      <td class="num">${b.date ? frDate(b.date) : '—'}</td>
+      ${ed ? td(b,'nom',i('nom','com'),true) : `<td class="nom">${esc(b.nom)}</td>`}
+      ${ed ? td(b,'agence',`<select data-k="agence" data-id="${esc(b.id)}" aria-label="Agence">${opt(Object.keys(RATES).sort(), b.agence)}</select>`,true) : `<td>${esc(b.agence)}</td>`}
+      ${ed ? td(b,'cat',s('cat',CATS),true) : `<td>${esc(b.cat)}</td>`}
+      ${ed ? td(b,'genre',s('genre',GENRES),true) : `<td>${esc(b.genre)}</td>`}
+      ${ed ? td(b,'coll',s('coll',COLLS),true) : `<td>${esc(b.coll)}</td>`}
+      ${ed ? td(b,'saison',i('saison','sai'),true) : `<td>${esc(b.saison)}</td>`}
+      ${ed ? td(b,'loc',i('loc','ref'),true) : `<td>${esc(b.loc)}</td>`}
+      <td class="num">${hfmt(b.debut)}</td><td class="num">${hfmt(b.fin)}</td><td class="r num">${hfmt(b.heures)}</td>
+      ${ed ? `<td class="r${(b.estime===''||b.estime==null) && b.st!=='A' ? ' todo' : ''}">${i('estime','n','number')}</td>` : `<td class="r num">${eur(b.estime)}</td>`}
+      ${ed ? `<td class="r">${i('supp','n','number')}</td>` : `<td class="r num">${b.supp!==''?eur(b.supp):''}</td>`}
+      ${ed ? `<td class="r">${i('reel','n','number')}</td>` : `<td class="r num">${b.reel!==''?eur(b.reel):''}</td>`}
+      ${ed ? `<td>${i('ref','ref')}</td>` : `<td>${esc(b.ref)}</td>`}
+      ${ed ? td(b,'com',i('com','com'),true) : `<td>${esc(b.com)}</td>`}
+      <td><button type="button" class="rowcopy" data-copy="${esc(b.id)}" title="Copy this row for Excel">Copy</button></td></tr>`;
+  }
+  const tE = shown.reduce((s,b)=>s+(+b.estime||0),0), tR = shown.reduce((s,b)=>s+(+b.reel||0),0);
+  h += `</tbody><tfoot><tr><td colspan="14">${shown.length} row${shown.length===1?'':'s'}</td><td class="r num">${eur(tE)}</td><td></td><td class="r num">${eur(tR)}</td><td colspan="3"></td></tr></tfoot>`;
+  $('rows').innerHTML = h;
+  $('rowsMore').innerHTML = rows.length > shown.length ? `Showing the latest ${shown.length} of ${rows.length}. <button class="btn small" type="button" id="showMore">Show all</button>` : '';
+  renderRates();
+}
+function renderRates(){
+  $('rates').innerHTML = Object.keys(RATES).sort().map(ag => `<label>${esc(ag)}<span><input type="number" min="0" step="10" data-rate="${esc(ag)}" data-kind="day" value="${RATES[ag].day??''}" aria-label="${esc(ag)} day rate"> <input type="number" min="0" step="10" data-rate="${esc(ag)}" data-kind="half" value="${RATES[ag].half??''}" placeholder="½ day" aria-label="${esc(ag)} half-day rate"></span></label>`).join('') || '<span class="sub">No agencies yet.</span>';
+}
+
+/* ---------- Export ---------- */
+function trackerRow(b){
+  const d = b.date;
+  return [b.nom, b.agence, b.cat, b.genre, b.coll, b.saison, b.loc, d ? frDate(d) : '', d ? d.getFullYear() : '', d ? MOIS[d.getMonth()] : '',
+    hfmt(b.debut), hfmt(b.fin), hfmt(b.heures), b.estime, b.reel, b.ref, '', '', '', '', '', '', b.com, b.supp, b.st==='T' ? '' : b.st];
+}
+const tsv = rows => rows.map(r => r.map(v => String(v ?? '').replace(/[\t\r\n]+/g,' ')).join('\t')).join('\n');
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function copy(text, msg){
+  const fb = () => { $('copyText').value = text; $('copyBox').hidden = false; $('copyText').focus(); $('copyText').select(); };
+  try { navigator.clipboard.writeText(text).then(() => toast(msg), fb); } catch(e){ fb(); }
+}
+$('copyClose').onclick = () => $('copyBox').hidden = true;
+const selected = () => [...S.sel].map(byId).filter(Boolean).sort((a,b) => (a.date||0)-(b.date||0) || (a.debut??0)-(b.debut??0));
+$('copySel').onclick = () => { const s = selected(); if (!s.length) return; copy(tsv(s.map(trackerRow)), `${s.length} row${s.length===1?'':'s'} copied. Paste in column A of the first empty row.`); };
+$('dlSel').onclick = () => {
+  const s = selected(); if (!s.length || typeof XLSX==='undefined') return;
+  const aoa = [TRACKER_HEAD, ...s.map(b => { const r = trackerRow(b); r[7] = b.date ? new Date(Date.UTC(b.date.getFullYear(), b.date.getMonth(), b.date.getDate())) : ''; return r; })];
+  const ws = XLSX.utils.aoa_to_sheet(aoa, {cellDates:true, dateNF:'dd/mm/yy'});
+  ws['!cols'] = TRACKER_HEAD.map((h,i) => ({wch: [20,16,12,10,10,8,12,10,7,10,7,7,8,8,8,12,10,8,10,10,8,10,24,8,8][i]}));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Nouvelles lignes');
+  XLSX.writeFile(wb, `Tracker_nouvelles_lignes_${dkey(new Date())}.xlsx`);
+  toast(`Downloaded ${s.length} rows`);
+};
+
+/* ---------- Budget ---------- */
 function renderBudget(){
-  const all = EV;
-  const real = all.filter(e => isPast(e)).reduce((s,e) => s + cost(e), 0);
-  const plan = all.filter(e => !isPast(e)).reduce((s,e) => s + est(e), 0);
+  const yr = new Date().getFullYear();
+  const live = ALL.filter(b => b.date && b.date.getFullYear()===yr && b.st==='C');
+  const real = live.reduce((s,b) => s + (+b.reel||0), 0);
+  const plan = live.filter(b => b.reel==='' || b.reel==null).reduce((s,b) => s + (+b.estime||0), 0);
   const left = S.budget - real - plan;
+  $('budgetTitle').textContent = `Budget ${yr}`;
   $('budgetIn').value = S.budget;
-  $('budgetSub').textContent = `${all.filter(e=>e.status!=='Cancelled').length} fittings in the calendar. Past fittings use the real cost when it's filled in, otherwise the estimate.`;
+  $('budgetSub').textContent = `${live.length} confirmed fittings in ${yr}, including ${S.cal.filter(c=>c.isNew && c.st==='C').length} from the calendar not yet in the tracker.`;
   $('kReal').textContent = eur(real); $('kPlan').textContent = eur(plan);
   $('kLeft').textContent = (left<0?'−':'') + eur(Math.abs(left)); $('kLeft').classList.toggle('neg', left<0);
   const B = Math.max(S.budget, real+plan, 1);
-  $('stack').innerHTML = `<div style="width:${real/B*100}%;background:var(--accent)"></div><div style="width:${plan/B*100}%;background:color-mix(in srgb,var(--accent) 40%,var(--sunk))"></div>${left<0?`<div style="width:0"></div>`:''}`;
-  $('stackKeys').innerHTML = `<span><span class="sw" style="background:var(--accent)"></span>Spent ${Math.round(real/S.budget*100)}%</span><span><span class="sw" style="background:color-mix(in srgb,var(--accent) 40%,var(--sunk))"></span>Planned ${Math.round(plan/S.budget*100)}%</span><span><span class="sw" style="background:var(--sunk)"></span>${left>=0?'Free':'Over budget'} ${Math.abs(Math.round(left/S.budget*100))}%</span>`;
-  const teams = {};
-  all.forEach(e => { const k = e.team || 'No team'; teams[k] = (teams[k]||0) + (isPast(e) ? cost(e) : est(e)); });
-  const tmax = Math.max(...Object.values(teams), 1);
-  $('teams').innerHTML = Object.entries(teams).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `<div class="team"><div class="row"><span>${esc(k)}</span><b class="num">${eur(v)}</b></div><div class="tr"><div style="width:${v/tmax*100}%"></div></div></div>`).join('');
+  $('stack').innerHTML = `<div style="width:${real/B*100}%;background:var(--accent)"></div><div style="width:${plan/B*100}%;background:color-mix(in srgb,var(--accent) 35%,var(--sunk))"></div>`;
+  const pc = x => S.budget ? Math.round(x/S.budget*100) : 0;
+  $('stackKeys').innerHTML = `<span><span class="sw" style="background:var(--accent)"></span>Réel ${pc(real)}%</span><span><span class="sw" style="background:color-mix(in srgb,var(--accent) 35%,var(--sunk))"></span>Estimé, no Réel yet ${pc(plan)}%</span><span><span class="sw" style="background:var(--sunk)"></span>${left>=0?'Left':'Over budget'} ${Math.abs(pc(left))}%</span>`;
 
-  const rows = S.scope==='week' ? all.filter(inWeek) : all;
-  document.querySelectorAll('#scopeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.s===S.scope));
-  if (!rows.length){ $('tracker').innerHTML = '<tr><td class="empty">No fittings this week.</td></tr>'; return; }
-  let tE=0,tR=0;
-  const INV = ['—','To invoice','Invoiced','Paid','Not billable'];
-  let h = `<thead><tr><th>Date</th><th>Time</th><th>Model</th><th>Agency</th><th>Purpose</th><th>Team</th><th class="r">Hours</th><th class="r">Rate</th><th class="r">Estimated</th><th class="r">Real</th><th class="r">Difference</th><th>Invoice</th></tr></thead><tbody>`;
-  rows.forEach(e => {
-    const E = est(e), Rv = e.real===''||e.real==null ? null : +e.real; tE += E; if (Rv!=null) tR += Rv;
-    const v = Rv==null ? null : Rv - E;
-    h += `<tr class="${e.status==='Cancelled'?'cancel':''}"><td>${dayLbl(e.start)}</td><td class="num">${hm(e.start)}</td><td>${esc(e.name)}${e.status!=='Confirmed'?` <small>(${e.status.toLowerCase()})</small>`:''}</td><td>${esc(e.agency)}</td><td>${esc(e.purpose)}</td><td>${esc(e.team)}</td>
-      <td class="r num">${hours(e).toFixed(1)}</td><td class="r num">${eur(e.rate)}</td><td class="r num">${eur(E)}</td>
-      <td class="r"><input class="real" type="number" min="0" step="10" inputmode="decimal" id="real-${esc(e.id)}" data-id="${esc(e.id)}" value="${Rv==null?'':Rv}" placeholder="${isPast(e)?'add':''}" aria-label="Real cost for ${esc(e.name)} on ${dayLbl(e.start)}"></td>
-      <td class="r num var ${v>0?'up':v<0?'down':''}">${v==null?'':(v>0?'+':v<0?'−':'')+(v?eur(Math.abs(v)):'€0')}</td>
-      <td><select data-inv="${esc(e.id)}" id="inv-${esc(e.id)}" aria-label="Invoice status">${INV.map(o=>`<option ${o===e.inv?'selected':''}>${o}</option>`).join('')}</select></td></tr>`;
-  });
-  h += `</tbody><tfoot><tr><td colspan="8">${rows.length} rows</td><td class="r num">${eur(tE)}</td><td class="r num">${eur(tR)}</td><td></td><td></td></tr></tfoot>`;
-  $('tracker').innerHTML = h;
+  // month chart
+  const M = Array.from({length:12}, () => ({e:0,r:0}));
+  live.forEach(b => { M[b.date.getMonth()].e += +b.estime||0; M[b.date.getMonth()].r += +b.reel||0; });
+  const mx = Math.max(...M.map(m=>Math.max(m.e,m.r)), 1);
+  const nice = (() => { const p = Math.pow(10, Math.floor(Math.log10(mx))); const s = [1,2,2.5,5,10].map(x=>x*p).find(x => x*4 >= mx); return s; })();
+  const top = nice*4, W = 640, H = 240, L = 44, Bm = 22, cw = (W-L-6)/12, bw = cw*0.34;
+  const y = v => H - Bm - (v/top)*(H-Bm-10);
+  let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Estimé and Réel per month">`;
+  for (let i=0;i<=4;i++){ const v = nice*i; svg += `<line x1="${L}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3.5}" text-anchor="end">${v>=1000 ? Math.round(v/1000)+'k' : v}</text>`; }
+  M.forEach((m,i) => { const x = L + i*cw + cw/2;
+    svg += `<rect x="${x-bw-1}" y="${y(m.e)}" width="${bw}" height="${H-Bm-y(m.e)}" rx="2" fill="color-mix(in srgb,var(--accent) 35%,var(--sunk))"><title>${MOIS[i]} Estimé ${eur(m.e)}</title></rect>`;
+    svg += `<rect x="${x+1}" y="${y(m.r)}" width="${bw}" height="${H-Bm-y(m.r)}" rx="2" fill="var(--accent)"><title>${MOIS[i]} Réel ${eur(m.r)}</title></rect>`;
+    svg += `<text x="${x}" y="${H-6}" text-anchor="middle">${MONTHS[i]}</text>`; });
+  $('monthChart').innerHTML = svg + '</svg>';
+
+  // pivot by agency
+  const months = [...new Set(live.map(b => b.date.getMonth()))].sort((a,b)=>a-b);
+  $('pivMonth').innerHTML = `<option value="all">All of ${yr}</option>` + months.map(m => `<option value="${m}" ${String(m)===String(S.pivMonth)?'selected':''}>${MOIS[m]}</option>`).join('');
+  const rows = live.filter(b => S.pivMonth==='all' || b.date.getMonth()===+S.pivMonth);
+  const g = {}; rows.forEach(b => { const k = b.agence || '(no agency)'; (g[k] ||= {e:0,r:0,n:0}); g[k].e += +b.estime||0; g[k].r += +b.reel||0; g[k].n++; });
+  const list = Object.entries(g).sort((a,b)=>b[1].e-a[1].e);
+  const T = list.reduce((s,[,v]) => ({e:s.e+v.e, r:s.r+v.r, n:s.n+v.n}), {e:0,r:0,n:0});
+  $('pivot').innerHTML = `<thead><tr><th>Agence</th><th class="r">Fittings</th><th class="r">Estimé</th><th class="r">Réel</th></tr></thead><tbody>` +
+    list.map(([k,v]) => `<tr><td>${esc(k)}</td><td class="r num">${v.n}</td><td class="r num">${eur(v.e)}</td><td class="r num">${eur(v.r)}</td></tr>`).join('') +
+    `</tbody><tfoot><tr><td>Total</td><td class="r num">${T.n}</td><td class="r num">${eur(T.e)}</td><td class="r num">${eur(T.r)}</td></tr></tfoot>`;
 }
 
-function invGroups(){
-  const g = {};
-  EV.filter(e => isPast(e) && e.inv==='To invoice').forEach(e => (g[e.agency] ||= []).push(e));
-  return Object.entries(g).sort((a,b)=>b[1].length-a[1].length);
-}
+/* ---------- Invoices ---------- */
 function renderInv(){
-  const groups = invGroups();
+  const t0 = today0();
+  const waiting = ALL.filter(b => b.date && b.date < t0 && b.st==='C' && !b.ref);
+  const g = {}; waiting.forEach(b => (g[b.agence||'(no agency)'] ||= []).push(b));
+  const groups = Object.entries(g).sort((a,b)=>b[1].length-a[1].length);
   $('invGrid').innerHTML = groups.length ? groups.map(([ag, evs]) => {
-    const total = evs.reduce((s,e)=>s+cost(e),0), noReal = evs.filter(e => e.real===''||e.real==null).length;
+    const total = evs.reduce((s,e)=>s+(e.reel!==''&&e.reel!=null ? +e.reel : +e.estime||0),0), noReal = evs.filter(e => e.reel===''||e.reel==null).length;
     return `<div class="panel inv"><div class="h"><h3>${esc(ag)}</h3><div class="total">${eur(total)}</div></div>
-      <ul>${evs.map(e=>`<li><span>${dayLbl(e.start)} · ${esc(e.name)} · ${esc(e.purpose)}</span><span class="num">${eur(cost(e))}${e.real===''||e.real==null?'*':''}</span></li>`).join('')}</ul>
-      ${noReal?`<div class="miss">* ${noReal} without a real cost yet, estimate used</div>`:''}
-      <div class="actions"><button class="btn small" type="button" data-copyinv="${esc(ag)}">Copy summary</button><button class="btn small" type="button" data-markinv="${esc(ag)}">Mark as invoiced</button></div></div>`;
-  }).join('') : '<div class="empty">Nothing waiting to be invoiced.</div>';
+      <ul>${evs.map(e=>`<li><span>${frDate(e.date)} · ${esc(e.nom)}</span><span class="num">${eur(e.reel!==''&&e.reel!=null?e.reel:e.estime)}${e.reel===''||e.reel==null?'*':''}</span></li>`).join('')}</ul>
+      <div class="sub">${evs.length} fitting${evs.length===1?'':'s'}${noReal?` · <span class="miss">* ${noReal} without Réel, Estimé used</span>`:''}</div>
+      <div class="actions"><button class="btn small" type="button" data-copyinv="${esc(ag)}">Copy list for the agency</button></div></div>`;
+  }).join('') : '<div class="empty">Every past fitting has an invoice reference.</div>';
+  const q = norm(S.refQ);
+  const R = {}; ALL.filter(b => b.ref).forEach(b => { const k = String(b.ref); (R[k] ||= {ag:new Set(), e:0, r:0, n:0, min:b.date, max:b.date}); const x = R[k]; x.ag.add(b.agence); x.e += +b.estime||0; x.r += +b.reel||0; x.n++; if (b.date && (!x.min || b.date < x.min)) x.min = b.date; if (b.date && (!x.max || b.date > x.max)) x.max = b.date; });
+  const list = Object.entries(R).filter(([k,v]) => !q || norm(k).includes(q) || norm([...v.ag].join(' ')).includes(q)).sort((a,b) => (b[1].max||0) - (a[1].max||0));
+  $('refTable').innerHTML = `<thead><tr><th>Réf facture</th><th>Agence</th><th>Period</th><th class="r">Lines</th><th class="r">Estimé</th><th class="r">Réel</th><th class="r">Écart</th></tr></thead><tbody>` +
+    (list.length ? list.slice(0,200).map(([k,v]) => { const gap = v.r - v.e; return `<tr><td class="num">${esc(k)}</td><td>${esc([...v.ag].join(', '))}</td><td class="num">${v.min?frDate(v.min):''}${v.max && v.min && dkey(v.max)!==dkey(v.min)?' – '+frDate(v.max):''}</td><td class="r num">${v.n}</td><td class="r num">${eur(v.e)}</td><td class="r num">${eur(v.r)}</td><td class="r num gap ${gap>0?'up':gap<0?'down':''}">${gap?(gap>0?'+':'−')+eur(Math.abs(gap)):'€0'}</td></tr>`; }).join('') : `<tr><td colspan="7" class="empty">No invoice references found.</td></tr>`) + '</tbody>';
 }
-
-/* ---------- Copy ---------- */
-function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2200); }
-function copy(text,msg){
-  const fb = () => { $('copyText').value=text; $('copyBox').hidden=false; $('copyText').focus(); $('copyText').select(); };
-  try { navigator.clipboard.writeText(text).then(()=>toast(msg), fb); } catch(e){ fb(); }
-}
-$('copyClose').onclick = () => $('copyBox').hidden = true;
-$('copyMsg').onclick = () => copy(buildMsg(weekDays()), 'Message copied. Paste it into WhatsApp.');
-$('copyTracker').onclick = () => {
-  const rows = S.scope==='week' ? EV.filter(inWeek) : EV;
-  const head = ['Date','Start','End','Model','Agency','Purpose','Location','Team','Status','Hours','Rate','Estimated','Real','Invoice'];
-  const lines = rows.map(e => [dkey(e.start), hm(e.start), hm(e.end), e.name, e.agency, e.purpose, e.location, e.team, e.status, hours(e).toFixed(2), e.rate, Math.round(est(e)), e.real??'', e.inv].map(v=>String(v??'').replace(/\t|\n/g,' ')).join('\t'));
-  copy([head.join('\t'), ...lines].join('\n'), `Copied ${rows.length} rows. Paste them into the tracker.`);
-};
 
 /* ---------- Events ---------- */
 document.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b){ S.tab = b.dataset.tab; render(); } };
@@ -517,52 +803,101 @@ $('nextW').onclick = () => { S.week = addDays(S.week,7); S.days=null; render(); 
 $('todayW').onclick = () => { S.week = mondayOf(new Date()); S.days=null; render(); };
 $('days').onclick = e => {
   const b = e.target.closest('.status'); if (!b) return;
-  const ev = EV.find(x => x.id===b.dataset.id); const order = ['Confirmed','Tentative','Cancelled'];
-  ev.status = order[(order.indexOf(ev.status)+1)%3]; saveEdits(); render();
+  const ev = byId(b.dataset.id); if (!ev) return;
+  if (ev.src==='tracker'){ toast('This fitting is already in the tracker. Change its status there.'); return; }
+  setStatus(ev, {C:'T', T:'A', A:'C'}[ev.st]); rebuild(); saveEdits(); render();
 };
+function setStatus(ev, st){
+  if (st==='A' && ev.st!=='A'){ ev._est = ev.estime; ev.estime = 0; }
+  if (st!=='A' && ev.st==='A'){ ev.estime = ev._est ?? rateFor(ev.agence, ev.heures) ?? ''; }
+  ev.st = st;
+}
 $('dayChips').onclick = e => {
   const b = e.target.closest('[data-day]'); if (!b || b.disabled) return;
   const wd = weekDays().filter(x=>x.evs.length).map(x=>dkey(x.d));
   if (b.dataset.day==='all') S.days = wd;
-  else {
-    const allOn = wd.every(k => S.days.includes(k));
-    if (allOn) S.days = [b.dataset.day];
-    else S.days = S.days.includes(b.dataset.day) ? S.days.filter(k=>k!==b.dataset.day) : [...S.days, b.dataset.day];
-    if (!S.days.length) S.days = [b.dataset.day];
-  }
+  else { const allOn = wd.every(k => S.days.includes(k)); S.days = allOn ? [b.dataset.day] : (S.days.includes(b.dataset.day) ? S.days.filter(k=>k!==b.dataset.day) : [...S.days, b.dataset.day]); if (!S.days.length) S.days = [b.dataset.day]; }
   renderPlan();
 };
 $('incTent').onchange = e => { S.incTent = e.target.checked; renderPlan(); };
-$('budgetIn').onchange = e => { S.budget = Math.max(0, +e.target.value || 0); saveEdits(); render(); };
-$('scopeSeg').onclick = e => { const b = e.target.closest('[data-s]'); if (b){ S.scope = b.dataset.s; render(); } };
-$('tracker').addEventListener('change', e => {
+$('copyMsg').onclick = () => copy(buildMsg(weekDays()), 'Message copied. Paste it into WhatsApp.');
+
+$('fShow').onclick = e => { const b = e.target.closest('[data-v]'); if (b){ S.show = b.dataset.v; renderRows(); } };
+$('fMonth').onchange = e => { S.month = e.target.value; renderRows(); };
+$('fAg').onchange = e => { S.ag = e.target.value; renderRows(); };
+$('fQ').oninput = e => { S.q = e.target.value; renderRows(); $('fQ').focus(); };
+$('rowsMore').onclick = e => { if (e.target.id==='showMore'){ S.cap = 100000; renderRows(); } };
+$('rows').addEventListener('change', e => {
   const t = e.target;
-  if (t.matches('input.real')){ const ev = EV.find(x=>x.id===t.dataset.id); ev.real = t.value===''?'':Math.max(0,+t.value); saveEdits(); render(); $('real-'+ev.id)?.focus(); }
-  if (t.matches('select[data-inv]')){ const ev = EV.find(x=>x.id===t.dataset.inv); ev.inv = t.value; saveEdits(); render(); }
+  if (t.id==='selAll'){ S.selTouched = true; filtered().slice(-S.cap).forEach(b => t.checked ? S.sel.add(b.id) : S.sel.delete(b.id)); renderRows(); return; }
+  if (t.classList.contains('sel')){ S.selTouched = true; t.checked ? S.sel.add(t.dataset.id) : S.sel.delete(t.dataset.id); renderRows(); return; }
+  const k = t.dataset.k; if (!k) return;
+  const ev = byId(t.dataset.id); if (!ev || ev.src!=='calendar') return;
+  if (k==='st') setStatus(ev, t.value);
+  else if (['estime','reel','supp'].includes(k)) ev[k] = t.value==='' ? '' : Math.max(0, +t.value);
+  else ev[k] = t.value;
+  if (k==='agence' && !ev.estime && ev.st!=='A') ev.estime = rateFor(ev.agence, ev.heures) ?? '';
+  if (k==='supp' && ev.supp!=='' && ev.reel==='') ev.reel = (+ev.estime||0) + ev.supp;
+  rebuild(); saveEdits(); renderRows();
+  const again = document.querySelector(`#rows [data-k="${k}"][data-id="${CSS.escape(ev.id)}"]`); again?.focus();
 });
+$('rows').addEventListener('click', e => { const b = e.target.closest('[data-copy]'); if (!b) return; const ev = byId(b.dataset.copy); copy(tsv([trackerRow(ev)]), `Row copied: ${ev.nom}, ${frDate(ev.date)}. Paste in column A.`); });
+$('rates').addEventListener('change', e => {
+  const t = e.target; if (!t.dataset.rate) return;
+  const r = RATES[t.dataset.rate] ||= {}; r[t.dataset.kind] = t.value==='' ? null : +t.value;
+  S.cal.forEach(b => { if (b.isNew && b.agence===t.dataset.rate && b.st!=='A') b.estime = rateFor(b.agence, b.heures) ?? b.estime; });
+  saveEdits(); renderRows();
+});
+$('budgetIn').onchange = e => { S.budget = Math.max(0, +e.target.value || 0); saveEdits(); renderBudget(); };
+$('pivMonth').onchange = e => { S.pivMonth = e.target.value; renderBudget(); };
+$('refQ').oninput = e => { S.refQ = e.target.value; renderInv(); };
 $('invGrid').onclick = e => {
-  const c = e.target.closest('[data-copyinv]'), m = e.target.closest('[data-markinv]');
-  if (c){
-    const ag = c.dataset.copyinv, evs = invGroups().find(g=>g[0]===ag)[1];
-    const total = evs.reduce((s,x)=>s+cost(x),0);
-    const txt = `Invoice summary – ${ag}\n` + evs.map(x => `${dayLbl(x.start)}  ${hm(x.start)}–${hm(x.end)}  ${x.name}  ${x.purpose}  ${hours(x).toFixed(1)} h  ${eur(cost(x))}`).join('\n') + `\nTotal: ${eur(total)} (${evs.length} fittings)`;
-    copy(txt, `Summary for ${ag} copied`);
-  }
-  if (m){ const ag = m.dataset.markinv; EV.forEach(x => { if (x.agency===ag && isPast(x) && x.inv==='To invoice') x.inv='Invoiced'; }); saveEdits(); render(); toast(`${ag} marked as invoiced`); }
+  const c = e.target.closest('[data-copyinv]'); if (!c) return;
+  const ag = c.dataset.copyinv, t0 = today0();
+  const evs = ALL.filter(b => b.date && b.date < t0 && b.st==='C' && !b.ref && (b.agence||'(no agency)')===ag);
+  const amt = b => b.reel!==''&&b.reel!=null ? +b.reel : +b.estime||0;
+  const txt = `${ag} – fittings waiting for an invoice\n` + evs.map(b => `${frDate(b.date)}\t${b.nom}\t${hfmt(b.debut)}–${hfmt(b.fin)}\t${b.com}\t${eur(amt(b))}`).join('\n') + `\nTotal: ${eur(evs.reduce((s,b)=>s+amt(b),0))} (${evs.length} fittings)`;
+  copy(txt, `List for ${ag} copied`);
 };
-$('resetBtn').onclick = () => setData(makeSample(), null);
-$('file').onchange = e => {
+
+/* ---------- Files ---------- */
+$('calFile').onchange = e => {
   const f = e.target.files[0]; e.target.value=''; if (!f) return;
   const rd = new FileReader();
   rd.onload = () => {
     const evs = parseICS(String(rd.result));
-    if (!evs.length){ toast('No timed events found in that file. Export the calendar from Outlook as .ics and try again.'); return; }
-    setData(evs, f.name); toast(`Loaded ${evs.length} events`);
+    if (!evs.length){ toast('No timed events in that file. Export the calendar from Outlook as .ics and try again.'); return; }
+    evs.forEach(b => { if (b.estime==='' && b.st!=='A') b.estime = rateFor(b.agence, b.heures) ?? ''; if (b.st==='A') b.estime = 0; });
+    S.cal = evs; S.calName = f.name; S.selTouched = false; S.days = null;
+    if (!S.trName) S.tr = [];
+    if (!evs.some(b => b.date >= S.week && b.date < addDays(S.week,7))){ const nx = evs.find(b => b.date >= today0()) || evs[evs.length-1]; S.week = mondayOf(nx.date); }
+    rebuild(); setNote(); render(); toast(`Loaded ${evs.length} events`);
   };
   rd.readAsText(f);
 };
+$('trFile').onchange = e => {
+  const f = e.target.files[0]; e.target.value=''; if (!f) return;
+  if (typeof XLSX === 'undefined'){ toast('The Excel reader did not load. Check your connection and reload.'); return; }
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const wb = XLSX.read(new Uint8Array(rd.result), {type:'array'});
+      const t = parseTracker(wb);
+      if (!t || !t.rows.length){ toast('No sheet with "Nom" and "Agence" columns found in that file.'); return; }
+      S.tr = t.rows; S.trName = f.name; RATES = t.rates; if (t.budget) S.budget = t.budget;
+      if (!S.calName) S.cal = [];
+      S.cal.forEach(b => { if (b.isNew && (b.estime==='' || b.estime==null) && b.st!=='A') b.estime = rateFor(b.agence, b.heures) ?? ''; });
+      S.selTouched = false; S.month = 'all'; S.ag = 'all';
+      rebuild(); setNote(); render(); toast(`Read ${t.rows.length} rows from the "${t.sheet}" sheet`);
+    } catch(err){ toast('Could not read that file. Save it as .xlsx and try again.'); }
+  };
+  rd.readAsArrayBuffer(f);
+};
 
-setData(makeSample(), null);
+/* ---------- Start ---------- */
+const smp = makeSample();
+S.tr = smp.tracker; S.cal = smp.calendar; RATES = smp.rates; S.budget = smp.budget;
+loadEdits(); rebuild(); setNote(); render();
 })();
 </script>
 </body>
