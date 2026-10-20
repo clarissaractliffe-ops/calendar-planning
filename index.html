@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Fittings Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one calendar feeds three tabs. Planning (day list + WhatsApp preview), Budget tracker (editable table + totals), Invoices (per agency). */
+:root{
+  --bg:#F2F3F5; --surface:#FFFFFF; --sunk:#E7E9EE; --ink:#171C26; --muted:#5A6272; --line:#D6DAE2;
+  --accent:#2D4775; --accent-ink:#FFFFFF; --accent-soft:#DEE5F2;
+  --good:#3D8A57; --warn:#C7861C; --crit:#B4473A; --tent:#8A6FB0;
+  --wa-bg:#E6DED5; --wa-bubble:#D9FDD3; --wa-ink:#111B21;
+  --f-display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10131A; --surface:#171B24; --sunk:#1F2430; --ink:#E5E8EF; --muted:#98A0B0; --line:#2A3040;
+  --accent:#8FA9DA; --accent-ink:#0E1320; --accent-soft:#232E45;
+  --good:#6DBB86; --warn:#E0A440; --crit:#E2796A; --tent:#B39BD8;
+  --wa-bg:#0B141A; --wa-bubble:#005C4B; --wa-ink:#E9EDEF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10131A; --surface:#171B24; --sunk:#1F2430; --ink:#E5E8EF; --muted:#98A0B0; --line:#2A3040;
+  --accent:#8FA9DA; --accent-ink:#0E1320; --accent-soft:#232E45;
+  --good:#6DBB86; --warn:#E0A440; --crit:#E2796A; --tent:#B39BD8;
+  --wa-bg:#0B141A; --wa-bubble:#005C4B; --wa-ink:#E9EDEF; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(26px,4vw,36px);font-weight:700;line-height:1.1}
+h2{font-size:17px;font-weight:600}
+h3{font-size:14px;font-weight:600}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.lede{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.num{font-variant-numeric:tabular-nums}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px}
+.source{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--sunk);color:var(--muted);font-size:12.5px;font-weight:500}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.pill.real::before{background:var(--good)}
+.note{margin:-8px 0 0;color:var(--muted);font-size:12.5px;max-width:90ch}
+.btn{font:inherit;font-weight:500;font-size:13.5px;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.small{padding:6px 10px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:default}
+:is(.btn,select,input,.tab,.daychip):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.tabs{display:inline-flex;background:var(--sunk);border-radius:10px;padding:4px;gap:2px;flex-wrap:wrap}
+.tab{font:inherit;font-weight:500;font-size:13.5px;border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:7px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.tab .ct{font-size:11.5px;color:var(--muted);margin-left:4px}
+.weeknav{display:flex;align-items:center;gap:6px}
+.weeknav .lbl{font-family:var(--f-display);font-weight:600;font-size:15px;min-width:170px;text-align:center}
+.iconbtn{font:inherit;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;line-height:1}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.panel .head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+
+/* Planning */
+.plan{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:18px;align-items:start}
+@media (max-width:880px){.plan{grid-template-columns:minmax(0,1fr)}}
+.day{display:flex;flex-direction:column;gap:6px}
+.day + .day{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.day h3{display:flex;justify-content:space-between;align-items:baseline}
+.day h3 span{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:12.5px}
+.ev{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 10px;border-radius:8px;background:var(--bg)}
+.ev.cancel{opacity:.55}
+.ev.cancel .who{text-decoration:line-through}
+.ev .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:13px}
+.ev .who{font-weight:600}
+.ev .meta{color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:2px 10px}
+.status{font:inherit;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.status.Confirmed{border-color:color-mix(in srgb,var(--good) 50%,var(--surface));color:var(--good)}
+.status.Tentative{border-color:color-mix(in srgb,var(--tent) 50%,var(--surface));color:var(--tent)}
+.status.Cancelled{border-color:color-mix(in srgb,var(--crit) 50%,var(--surface));color:var(--crit)}
+@media (max-width:520px){.ev{grid-template-columns:minmax(0,1fr) auto}.ev .t{grid-column:1/-1}}
+.empty{color:var(--muted);padding:10px 2px}
+
+.daychips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.daychip{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
+.daychip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:500}
+.daychip:disabled{opacity:.45;cursor:default}
+.opt{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.chat{background:var(--wa-bg);border-radius:12px;padding:16px 14px;min-height:180px}
+.bubble{background:var(--wa-bubble);color:var(--wa-ink);border-radius:10px 2px 10px 10px;padding:9px 11px 6px;margin-left:auto;max-width:100%;width:fit-content;white-space:pre-wrap;word-break:break-word;font-size:13.5px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.1)}
+.bubble b{font-weight:700}
+.bubble .ts{display:block;text-align:right;font-size:10.5px;opacity:.6;margin-top:2px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fmt{margin-top:10px;font-size:12px;color:var(--muted)}
+.fmt code{font-family:var(--f-mono);font-size:11.5px;background:var(--sunk);padding:1px 5px;border-radius:4px}
+
+/* Budget */
+#v-budget{display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.kpi .v{font-family:var(--f-display);font-size:24px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi .v.neg{color:var(--crit)}
+.kpi input{font:inherit;font-family:var(--f-display);font-size:22px;font-weight:600;width:100%;max-width:170px;padding:2px 6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.stack{margin-top:16px}
+.stack .track{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--sunk)}
+.stack .track div{height:100%}
+.stack .keys{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.team .row{display:flex;justify-content:space-between;font-size:13px}
+.team .row b{font-weight:600}
+.team .tr{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden;margin-top:4px}
+.team .tr div{height:100%;background:var(--accent);border-radius:4px}
+
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tr.cancel td{color:var(--muted)}
+td input.real{font:inherit;font-size:13px;width:92px;padding:4px 6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+td select{font:inherit;font-size:12.5px;padding:4px 6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.var.up{color:var(--crit)} .var.down{color:var(--good)}
+tfoot td{font-weight:600;border-top:1px solid var(--line);border-bottom:0}
+.seg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px}
+.seg button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--muted);padding:5px 10px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* Invoices */
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px}
+.inv{display:flex;flex-direction:column;gap:10px}
+.inv .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.inv .total{font-family:var(--f-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.inv ul{list-style:none;margin:0;padding:0;font-size:13px}
+.inv li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.inv li:last-child{border-bottom:0}
+.inv li span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inv .miss{font-size:12px;color:var(--warn)}
+
+.prod{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.prod b{color:var(--ink);font-weight:600}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;max-width:calc(100vw - 32px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#copyBox{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:0 12px 32px rgba(0,0,0,.2);max-width:640px;margin:0 auto}
+#copyBox textarea{width:100%;height:180px;font-family:var(--f-mono);font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px}
+#copyBox .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Merchandising · Model fittings</div>
+      <h1>Fittings Planner</h1>
+      <p class="lede">One calendar, three outputs: the WhatsApp planning message, the budget tracker, and invoices per agency.</p>
+    </div>
+    <div class="source">
+      <span id="srcPill" class="pill">Sample calendar</span>
+      <label class="btn primary" for="file">Load Outlook calendar</label>
+      <input id="file" class="vh" type="file" accept=".ics,text/calendar">
+      <button id="resetBtn" class="btn" type="button" hidden>Back to sample</button>
+    </div>
+  </header>
+  <p class="note" id="note">Showing invented fittings. To try it on a real calendar, export it from Outlook as an .ics file and load it here. The file is read in your browser and is not uploaded anywhere.</p>
+
+  <div class="bar">
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button class="tab" role="tab" id="t-plan" aria-selected="true" data-tab="plan">Planning message</button>
+      <button class="tab" role="tab" id="t-budget" aria-selected="false" data-tab="budget">Budget tracker</button>
+      <button class="tab" role="tab" id="t-inv" aria-selected="false" data-tab="inv">Invoices <span class="ct" id="invCt"></span></button>
+    </div>
+    <div class="weeknav">
+      <button class="iconbtn" id="prevW" type="button" aria-label="Previous week">‹</button>
+      <div class="lbl" id="weekLbl"></div>
+      <button class="iconbtn" id="nextW" type="button" aria-label="Next week">›</button>
+      <button class="btn small" id="todayW" type="button">This week</button>
+    </div>
+  </div>
+
+  <!-- Planning -->
+  <section id="v-plan" class="plan" role="tabpanel" aria-labelledby="t-plan">
+    <div class="panel">
+      <div class="head"><div><h2>Fittings this week</h2><div class="sub">From the calendar. Click a status to change it.</div></div></div>
+      <div id="days"></div>
+    </div>
+    <div class="panel">
+      <div class="head"><div><h2>WhatsApp message</h2><div class="sub">Written in your planning format, ready to send.</div></div></div>
+      <div class="daychips" id="dayChips" role="group" aria-label="Which days to include"></div>
+      <label class="opt"><input type="checkbox" id="incTent" checked> Include tentative fittings</label>
+      <div class="chat"><div class="bubble" id="bubble"></div></div>
+      <div class="actions">
+        <button class="btn primary" id="copyMsg" type="button">Copy message</button>
+        <a class="btn" id="waLink" href="#" target="_blank" rel="noopener">Open in WhatsApp</a>
+      </div>
+      <p class="fmt">Each line: <code>name &gt; time &gt; purpose &gt; location &gt; team</code></p>
+    </div>
+  </section>
+
+  <!-- Budget -->
+  <section id="v-budget" role="tabpanel" aria-labelledby="t-budget" hidden>
+    <div class="panel">
+      <div class="head"><div><h2>Season budget</h2><div class="sub" id="budgetSub"></div></div></div>
+      <div class="kpis">
+        <div class="kpi"><div class="k"><label for="budgetIn">Budget (€)</label></div><input id="budgetIn" type="number" min="0" step="1000" inputmode="numeric"></div>
+        <div class="kpi"><div class="k">Spent (real)</div><div class="v" id="kReal"></div></div>
+        <div class="kpi"><div class="k">Still planned (est.)</div><div class="v" id="kPlan"></div></div>
+        <div class="kpi"><div class="k">Left after planned</div><div class="v" id="kLeft"></div></div>
+      </div>
+      <div class="stack">
+        <div class="track" id="stack" role="img" aria-label="Budget used"></div>
+        <div class="keys" id="stackKeys"></div>
+      </div>
+      <div class="teams" id="teams"></div>
+    </div>
+    <div class="panel">
+      <div class="head">
+        <div><h2>Tracker</h2><div class="sub">Rows come straight from the calendar. Fill in real costs as invoices arrive.</div></div>
+        <div class="tools">
+          <div class="seg" id="scopeSeg" role="group" aria-label="Rows to show">
+            <button type="button" data-s="week" aria-pressed="true">This week</button>
+            <button type="button" data-s="all" aria-pressed="false">Whole season</button>
+          </div>
+          <button class="btn small" id="copyTracker" type="button">Copy for Excel</button>
+        </div>
+      </div>
+      <div class="scroll"><table id="tracker"></table></div>
+    </div>
+  </section>
+
+  <!-- Invoices -->
+  <section id="v-inv" role="tabpanel" aria-labelledby="t-inv" hidden>
+    <div class="panel">
+      <div class="head"><div><h2>Ready to invoice</h2><div class="sub">Past fittings marked "To invoice", grouped by agency. Fittings without a real cost use the estimate.</div></div></div>
+      <div class="inv-grid" id="invGrid"></div>
+    </div>
+  </section>
+
+  <p class="prod"><b>In the real version</b>, the planner would read Marie's Outlook calendar directly and add each new fitting to the tracker on SharePoint, so nothing is typed twice. That needs IT to approve access to Microsoft 365 (Graph API or Power Automate).</p>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="copyBox" hidden>
+  <div class="row"><strong>Copy this text</strong><button class="btn small" id="copyClose" type="button">Close</button></div>
+  <textarea id="copyText" readonly aria-label="Text to copy"></textarea>
+</div>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const eur = n => (n==null || n==='' || isNaN(n)) ? '–' : '€' + Math.round(n).toLocaleString('en-GB');
+const pad = n => String(n).padStart(2,'0');
+const hm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const dayLbl = d => `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+const dkey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const mondayOf = d => { const x = new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x; };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+
+/* ---------- Sample calendar (invented, placed around the current week) ---------- */
+function makeSample(){
+  let a = 4417;
+  const R = () => { a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+  const pick = arr => arr[Math.floor(R()*arr.length)];
+  const MODELS = [
+    {n:'Inès R.', ag:'Atlas Models', rate:260},{n:'Malik D.', ag:'Nord Agency', rate:240},{n:'Sofia L.', ag:'Atlas Models', rate:300},
+    {n:'Yuna K.', ag:'Lumen Management', rate:280},{n:'Elena M.', ag:'Rive Talent', rate:220},{n:'Theo B.', ag:'Nord Agency', rate:240},
+    {n:'Aïcha N.', ag:'Lumen Management', rate:320},{n:'Lucas V.', ag:'Rive Talent', rate:220}];
+  const PURPOSE = [['Fitting 1',2],['Fitting 2',2],['Fitting 2',1.5],['Fitting 3',1.5],['Lookbook fitting',3],['Casting',1]];
+  const LOC = ['Fitting room A','Fitting room B','Studio 4','Showroom'];
+  const TEAM = ['Womenswear RTW','Womenswear RTW','Menswear RTW','Accessories'];
+  const start = addDays(mondayOf(new Date()), -14);
+  const now = new Date(); const evs = [];
+  for (let w=0; w<4; w++) for (let d=0; d<5; d++){
+    const day = addDays(start, w*7+d);
+    const n = 1 + Math.floor(R()*3.2);
+    let hour = 9 + Math.floor(R()*2);
+    for (let i=0;i<n;i++){
+      const m = pick(MODELS), [purpose,h] = pick(PURPOSE);
+      const s = new Date(day); s.setHours(hour, R()<.3?30:0, 0, 0);
+      const e = new Date(s.getTime() + h*3.6e6);
+      hour = e.getHours() + 1 + Math.floor(R()*2); if (hour > 17) break;
+      const past = e < now;
+      const status = R()<.07 ? 'Cancelled' : (!past && R()<.2 ? 'Tentative' : 'Confirmed');
+      const rate = purpose==='Lookbook fitting' ? Math.round(m.rate*1.4) : m.rate;
+      const ev = {id:'s'+evs.length, start:s, end:e, name:m.n, agency:m.ag, rate, purpose, location:pick(LOC), team:pick(TEAM), status, real:'', inv:'To invoice'};
+      const est = rate*h;
+      if (past){
+        if (status==='Cancelled') ev.real = R()<.5 ? Math.round(est*.5) : 0;
+        else { const r = R(); ev.real = r<.2 ? est + rate : r<.3 ? est + rate*.5 : est; }
+        const age = (now - e)/864e5;
+        ev.inv = age > 10 ? (R()<.6 ? 'Paid' : 'Invoiced') : 'To invoice';
+        if (status==='Cancelled' && ev.real===0) ev.inv = 'Not billable';
+        if (age < 3 && R()<.5) ev.real = '';
+      } else ev.inv = '—';
+      evs.push(ev);
+    }
+  }
+  return evs;
+}
+
+/* ---------- Outlook .ics reader ---------- */
+function parseICS(text){
+  const lines = text.replace(/\r\n/g,'\n').replace(/\n[ \t]/g,'').split('\n');
+  const evs = []; let cur = null;
+  const unesc = v => v.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
+  const parseDate = (params, v) => {
+    if (/VALUE=DATE(?!-)/.test(params) || /^\d{8}$/.test(v)) return null;
+    const m = v.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/); if (!m) return null;
+    return m[7] ? new Date(Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5],+m[6])) : new Date(+m[1],m[2]-1,+m[3],+m[4],+m[5],+m[6]);
+  };
+  for (const ln of lines){
+    if (ln === 'BEGIN:VEVENT'){ cur = {}; continue; }
+    if (ln === 'END:VEVENT'){ if (cur) evs.push(cur); cur = null; continue; }
+    if (!cur) continue;
+    const i = ln.indexOf(':'); if (i < 0) continue;
+    const left = ln.slice(0,i), v = ln.slice(i+1); const [key, ...params] = left.split(';'); const p = params.join(';');
+    if (key==='SUMMARY') cur.summary = unesc(v);
+    else if (key==='LOCATION') cur.location = unesc(v);
+    else if (key==='DESCRIPTION') cur.desc = unesc(v);
+    else if (key==='CATEGORIES') cur.cat = unesc(v).split(',')[0];
+    else if (key==='DTSTART') cur.start = parseDate(p, v);
+    else if (key==='DTEND') cur.end = parseDate(p, v);
+    else if (key==='STATUS') cur.status = v;
+    else if (key==='X-MICROSOFT-CDO-BUSYSTATUS') cur.busy = v;
+    else if (key==='UID') cur.uid = v;
+  }
+  const PURP = /(fitting|essayage|prueba|casting|lookbook|showroom|try[- ]?on)/i;
+  const field = (desc, re) => { const m = (desc||'').match(re); return m ? m[1].trim() : ''; };
+  return evs.filter(e => e.start).map((e,idx) => {
+    const parts = (e.summary||'').split(/\s*(?:>|–|—|\||:| - )\s*/).filter(Boolean);
+    let purpose = parts.find(x => PURP.test(x)) || '';
+    let name = parts.find(x => x !== purpose) || e.summary || '(no title)';
+    const end = e.end || new Date(e.start.getTime() + 3.6e6);
+    const rateTxt = field(e.desc, /rate\s*[:=]\s*€?\s*([\d.,]+)/i);
+    return {
+      id: 'i' + idx + '-' + (e.uid||'').slice(0,12), start:e.start, end, name, purpose: purpose || 'Meeting',
+      location: e.location || '', team: e.cat || field(e.desc, /team\s*[:=]\s*([^\n]+)/i),
+      agency: field(e.desc, /agency\s*[:=]\s*([^\n]+)/i) || 'No agency set',
+      rate: rateTxt ? parseFloat(rateTxt.replace(',','.')) : DEFAULT_RATE,
+      status: e.status==='CANCELLED' ? 'Cancelled' : (e.status==='TENTATIVE' || e.busy==='TENTATIVE') ? 'Tentative' : 'Confirmed',
+      real:'', inv: end < new Date() ? 'To invoice' : '—'
+    };
+  }).sort((a,b) => a.start - b.start);
+}
+const DEFAULT_RATE = 250;
+
+/* ---------- State ---------- */
+let EV = [];
+const S = {tab:'plan', week: mondayOf(new Date()), days:null, incTent:true, scope:'week', budget:25000, source:null};
+const STORE = 'fittings-planner-v1';
+function saveEdits(){
+  if (S.source) return;
+  try { localStorage.setItem(STORE, JSON.stringify({budget:S.budget, ev:Object.fromEntries(EV.map(e => [e.id,{real:e.real,inv:e.inv,status:e.status}]))})); } catch(e){}
+}
+function loadEdits(){
+  try { const d = JSON.parse(localStorage.getItem(STORE)||'null'); if (!d) return;
+    if (d.budget) S.budget = d.budget;
+    EV.forEach(e => { const x = d.ev && d.ev[e.id]; if (x) Object.assign(e, x); });
+  } catch(e){}
+}
+const hours = e => (e.end - e.start)/3.6e6;
+const est = e => e.status==='Cancelled' ? 0 : e.rate*hours(e);
+const isPast = e => e.end < new Date();
+const cost = e => e.real!=='' && e.real!=null ? +e.real : (isPast(e) ? est(e) : est(e));
+const inWeek = e => e.start >= S.week && e.start < addDays(S.week,7);
+
+function setData(evs, source){
+  EV = evs; S.source = source; S.week = mondayOf(new Date()); S.days = null; S.budget = 25000;
+  if (!source) loadEdits();
+  if (source && EV.length && !EV.some(inWeek)) S.week = mondayOf(EV.find(e => e.start >= new Date())?.start || EV[EV.length-1].start);
+  $('srcPill').textContent = source ? `${source} · ${EV.length} events` : 'Sample calendar';
+  $('srcPill').classList.toggle('real', !!source);
+  $('resetBtn').hidden = !source;
+  $('note').textContent = source
+    ? `Read from your file in this browser. Purpose comes from the event title, team from the Outlook category, agency and rate from "Agency:" and "Rate:" lines in the event notes (default €${DEFAULT_RATE}/h).`
+    : 'Showing invented fittings. To try it on a real calendar, export it from Outlook as an .ics file and load it here. The file is read in your browser and is not uploaded anywhere.';
+  render();
+}
+
+/* ---------- Render ---------- */
+function render(){
+  const we = addDays(S.week, 4);
+  $('weekLbl').textContent = `${S.week.getDate()} ${MONTHS[S.week.getMonth()]} – ${we.getDate()} ${MONTHS[we.getMonth()]}`;
+  ['plan','budget','inv'].forEach(t => { $('v-'+t).hidden = S.tab!==t; $('t-'+t).setAttribute('aria-selected', S.tab===t); });
+  const toInv = EV.filter(e => isPast(e) && e.inv==='To invoice');
+  $('invCt').textContent = toInv.length ? toInv.length : '';
+  if (S.tab==='plan') renderPlan(); else if (S.tab==='budget') renderBudget(); else renderInv();
+}
+
+function weekDays(){
+  const out = [];
+  for (let i=0;i<7;i++){ const d = addDays(S.week,i); const evs = EV.filter(e => dkey(e.start)===dkey(d)); if (i<5 || evs.length) out.push({d, evs}); }
+  return out;
+}
+function renderPlan(){
+  const wd = weekDays();
+  $('days').innerHTML = wd.map(({d,evs}) => `
+    <div class="day"><h3>${dayLbl(d)}<span>${evs.filter(e=>e.status!=='Cancelled').length} fitting${evs.filter(e=>e.status!=='Cancelled').length===1?'':'s'}</span></h3>
+    ${evs.length ? evs.map(e => `
+      <div class="ev${e.status==='Cancelled'?' cancel':''}">
+        <div class="t">${hm(e.start)}–${hm(e.end)}</div>
+        <div><div class="who">${esc(e.name)}</div><div class="meta"><span>${esc(e.purpose)}</span>${e.location?`<span>${esc(e.location)}</span>`:''}${e.team?`<span>${esc(e.team)}</span>`:''}</div></div>
+        <button type="button" class="status ${e.status}" data-id="${esc(e.id)}" title="Change status">${e.status}</button>
+      </div>`).join('') : '<div class="empty">No fittings</div>'}
+    </div>`).join('');
+
+  const withEv = wd.filter(x => x.evs.length);
+  if (!S.days) { const t = dkey(new Date()); const nextDay = withEv.find(x => dkey(x.d) > t) || withEv.find(x => dkey(x.d)===t); S.days = nextDay ? [dkey(nextDay.d)] : withEv.map(x=>dkey(x.d)); }
+  const all = withEv.length && withEv.every(x => S.days.includes(dkey(x.d)));
+  $('dayChips').innerHTML = `<button type="button" class="daychip" data-day="all" aria-pressed="${all}">Whole week</button>` +
+    wd.map(({d,evs}) => `<button type="button" class="daychip" data-day="${dkey(d)}" aria-pressed="${!all && S.days.includes(dkey(d))}" ${evs.length?'':'disabled'}>${DAYS[d.getDay()]} ${d.getDate()}</button>`).join('');
+  $('incTent').checked = S.incTent;
+  const msg = buildMsg(wd);
+  $('bubble').innerHTML = msg ? esc(msg).replace(/\*([^*\n]+)\*/g,'<b>$1</b>') + `<span class="ts">${hm(new Date())}</span>` : '<span style="opacity:.7">No fittings in the selected days.</span>';
+  $('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+  $('copyMsg').disabled = !msg;
+}
+function buildMsg(wd){
+  const blocks = [];
+  wd.filter(x => S.days.includes(dkey(x.d))).forEach(({d,evs}) => {
+    const ok = evs.filter(e => e.status==='Confirmed' || (S.incTent && e.status==='Tentative'));
+    if (!ok.length) return;
+    blocks.push(`*Planning – ${dayLbl(d)}*\n` + ok.map(e =>
+      [e.name, `${hm(e.start)}–${hm(e.end)}`, e.purpose + (e.status==='Tentative'?' (TBC)':''), e.location||'TBC', e.team||'TBC'].join(' > ')).join('\n'));
+  });
+  return blocks.join('\n\n');
+}
+
+function renderBudget(){
+  const all = EV;
+  const real = all.filter(e => isPast(e)).reduce((s,e) => s + cost(e), 0);
+  const plan = all.filter(e => !isPast(e)).reduce((s,e) => s + est(e), 0);
+  const left = S.budget - real - plan;
+  $('budgetIn').value = S.budget;
+  $('budgetSub').textContent = `${all.filter(e=>e.status!=='Cancelled').length} fittings in the calendar. Past fittings use the real cost when it's filled in, otherwise the estimate.`;
+  $('kReal').textContent = eur(real); $('kPlan').textContent = eur(plan);
+  $('kLeft').textContent = (left<0?'−':'') + eur(Math.abs(left)); $('kLeft').classList.toggle('neg', left<0);
+  const B = Math.max(S.budget, real+plan, 1);
+  $('stack').innerHTML = `<div style="width:${real/B*100}%;background:var(--accent)"></div><div style="width:${plan/B*100}%;background:color-mix(in srgb,var(--accent) 40%,var(--sunk))"></div>${left<0?`<div style="width:0"></div>`:''}`;
+  $('stackKeys').innerHTML = `<span><span class="sw" style="background:var(--accent)"></span>Spent ${Math.round(real/S.budget*100)}%</span><span><span class="sw" style="background:color-mix(in srgb,var(--accent) 40%,var(--sunk))"></span>Planned ${Math.round(plan/S.budget*100)}%</span><span><span class="sw" style="background:var(--sunk)"></span>${left>=0?'Free':'Over budget'} ${Math.abs(Math.round(left/S.budget*100))}%</span>`;
+  const teams = {};
+  all.forEach(e => { const k = e.team || 'No team'; teams[k] = (teams[k]||0) + (isPast(e) ? cost(e) : est(e)); });
+  const tmax = Math.max(...Object.values(teams), 1);
+  $('teams').innerHTML = Object.entries(teams).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `<div class="team"><div class="row"><span>${esc(k)}</span><b class="num">${eur(v)}</b></div><div class="tr"><div style="width:${v/tmax*100}%"></div></div></div>`).join('');
+
+  const rows = S.scope==='week' ? all.filter(inWeek) : all;
+  document.querySelectorAll('#scopeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.s===S.scope));
+  if (!rows.length){ $('tracker').innerHTML = '<tr><td class="empty">No fittings this week.</td></tr>'; return; }
+  let tE=0,tR=0;
+  const INV = ['—','To invoice','Invoiced','Paid','Not billable'];
+  let h = `<thead><tr><th>Date</th><th>Time</th><th>Model</th><th>Agency</th><th>Purpose</th><th>Team</th><th class="r">Hours</th><th class="r">Rate</th><th class="r">Estimated</th><th class="r">Real</th><th class="r">Difference</th><th>Invoice</th></tr></thead><tbody>`;
+  rows.forEach(e => {
+    const E = est(e), Rv = e.real===''||e.real==null ? null : +e.real; tE += E; if (Rv!=null) tR += Rv;
+    const v = Rv==null ? null : Rv - E;
+    h += `<tr class="${e.status==='Cancelled'?'cancel':''}"><td>${dayLbl(e.start)}</td><td class="num">${hm(e.start)}</td><td>${esc(e.name)}${e.status!=='Confirmed'?` <small>(${e.status.toLowerCase()})</small>`:''}</td><td>${esc(e.agency)}</td><td>${esc(e.purpose)}</td><td>${esc(e.team)}</td>
+      <td class="r num">${hours(e).toFixed(1)}</td><td class="r num">${eur(e.rate)}</td><td class="r num">${eur(E)}</td>
+      <td class="r"><input class="real" type="number" min="0" step="10" inputmode="decimal" id="real-${esc(e.id)}" data-id="${esc(e.id)}" value="${Rv==null?'':Rv}" placeholder="${isPast(e)?'add':''}" aria-label="Real cost for ${esc(e.name)} on ${dayLbl(e.start)}"></td>
+      <td class="r num var ${v>0?'up':v<0?'down':''}">${v==null?'':(v>0?'+':v<0?'−':'')+(v?eur(Math.abs(v)):'€0')}</td>
+      <td><select data-inv="${esc(e.id)}" id="inv-${esc(e.id)}" aria-label="Invoice status">${INV.map(o=>`<option ${o===e.inv?'selected':''}>${o}</option>`).join('')}</select></td></tr>`;
+  });
+  h += `</tbody><tfoot><tr><td colspan="8">${rows.length} rows</td><td class="r num">${eur(tE)}</td><td class="r num">${eur(tR)}</td><td></td><td></td></tr></tfoot>`;
+  $('tracker').innerHTML = h;
+}
+
+function invGroups(){
+  const g = {};
+  EV.filter(e => isPast(e) && e.inv==='To invoice').forEach(e => (g[e.agency] ||= []).push(e));
+  return Object.entries(g).sort((a,b)=>b[1].length-a[1].length);
+}
+function renderInv(){
+  const groups = invGroups();
+  $('invGrid').innerHTML = groups.length ? groups.map(([ag, evs]) => {
+    const total = evs.reduce((s,e)=>s+cost(e),0), noReal = evs.filter(e => e.real===''||e.real==null).length;
+    return `<div class="panel inv"><div class="h"><h3>${esc(ag)}</h3><div class="total">${eur(total)}</div></div>
+      <ul>${evs.map(e=>`<li><span>${dayLbl(e.start)} · ${esc(e.name)} · ${esc(e.purpose)}</span><span class="num">${eur(cost(e))}${e.real===''||e.real==null?'*':''}</span></li>`).join('')}</ul>
+      ${noReal?`<div class="miss">* ${noReal} without a real cost yet, estimate used</div>`:''}
+      <div class="actions"><button class="btn small" type="button" data-copyinv="${esc(ag)}">Copy summary</button><button class="btn small" type="button" data-markinv="${esc(ag)}">Mark as invoiced</button></div></div>`;
+  }).join('') : '<div class="empty">Nothing waiting to be invoiced.</div>';
+}
+
+/* ---------- Copy ---------- */
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2200); }
+function copy(text,msg){
+  const fb = () => { $('copyText').value=text; $('copyBox').hidden=false; $('copyText').focus(); $('copyText').select(); };
+  try { navigator.clipboard.writeText(text).then(()=>toast(msg), fb); } catch(e){ fb(); }
+}
+$('copyClose').onclick = () => $('copyBox').hidden = true;
+$('copyMsg').onclick = () => copy(buildMsg(weekDays()), 'Message copied. Paste it into WhatsApp.');
+$('copyTracker').onclick = () => {
+  const rows = S.scope==='week' ? EV.filter(inWeek) : EV;
+  const head = ['Date','Start','End','Model','Agency','Purpose','Location','Team','Status','Hours','Rate','Estimated','Real','Invoice'];
+  const lines = rows.map(e => [dkey(e.start), hm(e.start), hm(e.end), e.name, e.agency, e.purpose, e.location, e.team, e.status, hours(e).toFixed(2), e.rate, Math.round(est(e)), e.real??'', e.inv].map(v=>String(v??'').replace(/\t|\n/g,' ')).join('\t'));
+  copy([head.join('\t'), ...lines].join('\n'), `Copied ${rows.length} rows. Paste them into the tracker.`);
+};
+
+/* ---------- Events ---------- */
+document.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b){ S.tab = b.dataset.tab; render(); } };
+$('prevW').onclick = () => { S.week = addDays(S.week,-7); S.days=null; render(); };
+$('nextW').onclick = () => { S.week = addDays(S.week,7); S.days=null; render(); };
+$('todayW').onclick = () => { S.week = mondayOf(new Date()); S.days=null; render(); };
+$('days').onclick = e => {
+  const b = e.target.closest('.status'); if (!b) return;
+  const ev = EV.find(x => x.id===b.dataset.id); const order = ['Confirmed','Tentative','Cancelled'];
+  ev.status = order[(order.indexOf(ev.status)+1)%3]; saveEdits(); render();
+};
+$('dayChips').onclick = e => {
+  const b = e.target.closest('[data-day]'); if (!b || b.disabled) return;
+  const wd = weekDays().filter(x=>x.evs.length).map(x=>dkey(x.d));
+  if (b.dataset.day==='all') S.days = wd;
+  else {
+    const allOn = wd.every(k => S.days.includes(k));
+    if (allOn) S.days = [b.dataset.day];
+    else S.days = S.days.includes(b.dataset.day) ? S.days.filter(k=>k!==b.dataset.day) : [...S.days, b.dataset.day];
+    if (!S.days.length) S.days = [b.dataset.day];
+  }
+  renderPlan();
+};
+$('incTent').onchange = e => { S.incTent = e.target.checked; renderPlan(); };
+$('budgetIn').onchange = e => { S.budget = Math.max(0, +e.target.value || 0); saveEdits(); render(); };
+$('scopeSeg').onclick = e => { const b = e.target.closest('[data-s]'); if (b){ S.scope = b.dataset.s; render(); } };
+$('tracker').addEventListener('change', e => {
+  const t = e.target;
+  if (t.matches('input.real')){ const ev = EV.find(x=>x.id===t.dataset.id); ev.real = t.value===''?'':Math.max(0,+t.value); saveEdits(); render(); $('real-'+ev.id)?.focus(); }
+  if (t.matches('select[data-inv]')){ const ev = EV.find(x=>x.id===t.dataset.inv); ev.inv = t.value; saveEdits(); render(); }
+});
+$('invGrid').onclick = e => {
+  const c = e.target.closest('[data-copyinv]'), m = e.target.closest('[data-markinv]');
+  if (c){
+    const ag = c.dataset.copyinv, evs = invGroups().find(g=>g[0]===ag)[1];
+    const total = evs.reduce((s,x)=>s+cost(x),0);
+    const txt = `Invoice summary – ${ag}\n` + evs.map(x => `${dayLbl(x.start)}  ${hm(x.start)}–${hm(x.end)}  ${x.name}  ${x.purpose}  ${hours(x).toFixed(1)} h  ${eur(cost(x))}`).join('\n') + `\nTotal: ${eur(total)} (${evs.length} fittings)`;
+    copy(txt, `Summary for ${ag} copied`);
+  }
+  if (m){ const ag = m.dataset.markinv; EV.forEach(x => { if (x.agency===ag && isPast(x) && x.inv==='To invoice') x.inv='Invoiced'; }); saveEdits(); render(); toast(`${ag} marked as invoiced`); }
+};
+$('resetBtn').onclick = () => setData(makeSample(), null);
+$('file').onchange = e => {
+  const f = e.target.files[0]; e.target.value=''; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    const evs = parseICS(String(rd.result));
+    if (!evs.length){ toast('No timed events found in that file. Export the calendar from Outlook as .ics and try again.'); return; }
+    setData(evs, f.name); toast(`Loaded ${evs.length} events`);
+  };
+  rd.readAsText(f);
+};
+
+setData(makeSample(), null);
+})();
+</script>
+</body>
+</html>
