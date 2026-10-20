@@ -1,10 +1,9 @@
 # Fittings Planner
 
-Prototype for model fittings planning, built around the RTW model tracker's columns (A–Y of the yearly sheet).
+Prototype for model fittings planning. It reads Marie's Outlook calendar (.ics export) and produces:
 
 - **Planning message**: the WhatsApp planning in `name > time > purpose > location > team` format.
-- **Tracker rows**: fittings from the calendar that are not in the tracker yet. Check them, then **Copy rows for Excel** (paste in column A of the first empty row) or **Download .xlsx**. Each row can also be copied on its own.
-- **Budget**: year budget, Estimé vs Réel by month and by agency.
-- **Invoices**: fittings waiting for an invoice reference, and totals per reference.
+- **Tracker rows**: one row per fitting in the exact column order of the *Tracker Models DEV RTW* yearly sheet (columns A–Y). Check the blue cells, then **Copy rows for Excel** and paste in column A of the first empty row, or **Download .xlsx**. Rows are marked once copied so they are not pasted twice. Each row can also be copied on its own.
+- **Costs**: estimated cost of the fittings in the calendar by month and by agency, from the agency day rates.
 
-Opens on **invented sample data**. "Load .ics" reads an Outlook calendar export and "Load tracker" reads the tracker .xlsx. Both are read in the browser and never uploaded. Single static file (`index.html`), no server.
+Opens on **invented sample fittings**. The calendar file is read in the browser and never uploaded; edits, day rates and copied marks are saved in that browser only. Single static file (`index.html`), no server.
