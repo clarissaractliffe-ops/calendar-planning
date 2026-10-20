@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* Layout: one source (Outlook calendar) feeds three tabs: Planning message, Tracker rows (tracker format A–Y), Costs. */
+/* Layout: one source (Outlook calendar) feeds two tabs: Planning message and Tracker rows (tracker format A–Y). */
 :root{
   --bg:#F2F3F5; --surface:#FFFFFF; --sunk:#E7E9EE; --ink:#171C26; --muted:#5A6272; --line:#D6DAE2;
   --accent:#2D4775; --accent-ink:#FFFFFF; --accent-soft:#DEE5F2;
@@ -179,21 +179,6 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
 .colmap{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.9}
 .colmap code{font-size:11px}
 
-/* Costs */
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.kpi .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
-.kpi .v{font-family:var(--f-display);font-size:24px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
-.kpi .v small{display:block;font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:400}
-.kpi input{font-family:var(--f-display);font-size:21px;font-weight:600;width:100%;max-width:180px;padding:2px 6px}
-.two{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
-@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
-.chart{width:100%;height:auto;display:block}
-.chart text{fill:var(--muted);font-size:10.5px;font-family:var(--f-body)}
-.keys{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:12.5px;color:var(--muted)}
-.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.pivot td,.pivot th{font-size:13px;padding:7px 8px}
-
 .prod{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;margin:0}
 .prod b{color:var(--ink);font-weight:600}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;max-width:calc(100vw - 32px)}
@@ -246,7 +231,6 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
     <div class="tabs" role="tablist" aria-label="Views">
       <button class="tab" role="tab" id="t-plan" data-tab="plan">Planning message</button>
       <button class="tab" role="tab" id="t-rows" data-tab="rows">Tracker rows<span class="ct" id="todoCt" hidden></span></button>
-      <button class="tab" role="tab" id="t-cost" data-tab="cost">Costs</button>
     </div>
     <div class="weeknav" id="weeknav">
       <button class="iconbtn" id="prevW" type="button" aria-label="Previous week">‹</button>
@@ -312,31 +296,6 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
       <div class="colmap" id="colmap"></div>
     </div>
     <p class="prod"><b>How to paste:</b> in the tracker, open the 2026 sheet, click the first empty cell in column A, then paste (Cmd+V or Ctrl+V). Each row fills columns A to Y in the tracker's order. Année and Période are pasted as values. Réel, Réf facture, the Finance columns (Q to V) and Heure supp are left empty, to be filled in the tracker.</p>
-  </section>
-
-  <!-- Costs -->
-  <section id="v-cost" class="view" role="tabpanel" aria-labelledby="t-cost" hidden>
-    <div class="panel">
-      <div class="head"><div><h2>Estimated cost of the fittings in the calendar</h2><div class="sub" id="costSub"></div></div></div>
-      <div class="kpis">
-        <div class="kpi"><div class="k"><label for="budgetIn">Year budget (€)</label></div><input id="budgetIn" type="number" min="0" step="1000" inputmode="numeric"></div>
-        <div class="kpi"><div class="k">This month</div><div class="v" id="kMonth"></div></div>
-        <div class="kpi"><div class="k">Next 4 weeks</div><div class="v" id="kNext"></div></div>
-        <div class="kpi"><div class="k">All loaded fittings</div><div class="v" id="kAll"></div></div>
-      </div>
-    </div>
-    <div class="two">
-      <div class="panel">
-        <div class="head"><div><h2>Estimé by month</h2><div class="sub">Confirmed fittings and options.</div></div></div>
-        <div id="monthChart"></div>
-        <div class="keys"><span><span class="sw" style="background:var(--accent)"></span>Confirmed</span><span><span class="sw" style="background:color-mix(in srgb,var(--tent) 55%,var(--sunk))"></span>Option</span></div>
-      </div>
-      <div class="panel">
-        <div class="head"><div><h2>By agency</h2><div class="sub">Confirmed fittings.</div></div><select id="pivMonth" aria-label="Month"></select></div>
-        <div class="scroll"><table class="pivot" id="pivot"></table></div>
-      </div>
-    </div>
-    <p class="prod">Réel, invoices and the Estimé vs Réel follow-up stay in the tracker, where Finance fills them in.</p>
   </section>
 
   <p class="prod"><b>In the real version</b>, the planner would read Marie's Outlook calendar and add the new rows to the tracker on SharePoint directly, with no copy and paste. That needs IT to approve access to Microsoft 365 (Graph API or Power Automate).</p>
@@ -475,7 +434,7 @@ function parseICS(text){
 }
 
 /* ---------- State ---------- */
-const S = {tab:'plan', week: mondayOf(new Date()), days:null, incTent:true, show:'todo', month:'all', ag:'all', q:'', pivMonth:'cur',
+const S = {tab:'plan', week: mondayOf(new Date()), days:null, incTent:true, show:'todo', month:'all', ag:'all', q:'',
   budget:1200000, file:null, rows:[], sel:new Set(), selTouched:false, cap:200};
 let COPIED = {}, EDITS = {};
 const K = () => S.file ? 'fp3-real' : 'fp3-sample';
@@ -488,7 +447,7 @@ const isCopied = b => !!COPIED[b.key];
 function defaultSel(){ if (!S.selTouched) S.sel = new Set(S.rows.filter(b => !isCopied(b) && b.st!=='T').map(b => b.key)); }
 
 function load(rows, file, copiedSeed){
-  S.rows = rows; S.file = file; S.days = null; S.selTouched = false; S.month = 'all'; S.ag = 'all'; S.q = ''; S.cap = 200; S.pivMonth = 'cur';
+  S.rows = rows; S.file = file; S.days = null; S.selTouched = false; S.month = 'all'; S.ag = 'all'; S.q = ''; S.cap = 200;
   COPIED = store.get(K()+'-copied', copiedSeed || {}); EDITS = store.get(K()+'-edits', {});
   RATES = store.get('fp3-rates-'+(file?'real':'sample'), file ? {} : {...SAMPLE_RATES});
   S.budget = store.get('fp3-budget', 1200000);
@@ -509,11 +468,11 @@ function load(rows, file, copiedSeed){
 
 /* ---------- Render ---------- */
 function render(){
-  ['plan','rows','cost'].forEach(t => { $('v-'+t).hidden = S.tab!==t; $('t-'+t).setAttribute('aria-selected', S.tab===t); });
+  ['plan','rows'].forEach(t => { $('v-'+t).hidden = S.tab!==t; $('t-'+t).setAttribute('aria-selected', S.tab===t); });
   $('weeknav').style.visibility = S.tab==='plan' ? 'visible' : 'hidden';
   const n = S.rows.filter(b => !isCopied(b) && b.st!=='T').length;
   $('todoCt').hidden = !n; $('todoCt').textContent = n;
-  if (S.tab==='plan') renderPlan(); else if (S.tab==='rows') renderRows(); else renderCost();
+  if (S.tab==='plan') renderPlan(); else renderRows();
 }
 
 function weekDays(){
@@ -664,41 +623,6 @@ $('dlSel').onclick = () => {
   toast(`Downloaded ${s.length} rows and marked them as copied`); markCopied(s);
 };
 
-/* ---------- Costs ---------- */
-function renderCost(){
-  const t0 = today0();
-  $('budgetIn').value = S.budget;
-  const live = S.rows.filter(b => b.st==='C');
-  const sum = arr => arr.reduce((s,b) => s + (+b.estime||0), 0);
-  const thisM = live.filter(b => monthKey(b.date)===monthKey(t0)), next = live.filter(b => b.date >= t0 && b.date < addDays(t0,28));
-  const pct = x => S.budget ? `<small>${(x/S.budget*100).toFixed(1)}% of the year budget</small>` : '';
-  $('kMonth').innerHTML = eur(sum(thisM)) + pct(sum(thisM)); $('kNext').innerHTML = eur(sum(next)) + pct(sum(next)); $('kAll').innerHTML = eur(sum(live)) + pct(sum(live));
-  const first = S.rows[0]?.date, last = S.rows[S.rows.length-1]?.date;
-  $('costSub').textContent = first ? `${live.length} confirmed fittings in the calendar, ${frDate(first)} to ${frDate(last)}. Estimé uses the agency day rates.` : 'No fittings loaded.';
-  const months = [...new Set(S.rows.map(b => monthKey(b.date)))].sort((a,b)=>a-b);
-  const M = months.map(m => ({m, c: sum(S.rows.filter(b => b.st==='C' && monthKey(b.date)===m)), t: sum(S.rows.filter(b => b.st==='T' && monthKey(b.date)===m))}));
-  const mx = Math.max(...M.map(x => x.c + x.t), 1);
-  const p = Math.pow(10, Math.floor(Math.log10(mx))); const step = [1,2,2.5,5,10].map(x=>x*p).find(x => x*4 >= mx);
-  const top = step*4, W = 640, H = 240, L = 44, Bm = 22, n = Math.max(M.length,1), cw = (W-L-6)/n, bw = Math.min(46, cw*0.55);
-  const y = v => H - Bm - (v/top)*(H-Bm-10);
-  let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Estimé per month">`;
-  for (let i=0;i<=4;i++){ const v = step*i; svg += `<line x1="${L}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3.5}" text-anchor="end">${v>=1000 ? (v/1000).toLocaleString('en-GB')+'k' : v}</text>`; }
-  M.forEach((x,i) => { const cx = L + i*cw + cw/2;
-    svg += `<rect x="${cx-bw/2}" y="${y(x.c)}" width="${bw}" height="${H-Bm-y(x.c)}" fill="var(--accent)"><title>${MOIS[x.m%100]}: ${eur(x.c)} confirmed</title></rect>`;
-    if (x.t) svg += `<rect x="${cx-bw/2}" y="${y(x.c+x.t)}" width="${bw}" height="${y(x.c)-y(x.c+x.t)}" fill="color-mix(in srgb,var(--tent) 55%,var(--sunk))"><title>${MOIS[x.m%100]}: ${eur(x.t)} options</title></rect>`;
-    svg += `<text x="${cx}" y="${H-6}" text-anchor="middle">${MONTHS[x.m%100]}</text>`; });
-  $('monthChart').innerHTML = svg + '</svg>';
-  if (S.pivMonth==='cur') S.pivMonth = months.includes(monthKey(t0)) ? String(monthKey(t0)) : 'all';
-  $('pivMonth').innerHTML = `<option value="all">All loaded months</option>` + months.map(m => `<option value="${m}" ${String(m)===String(S.pivMonth)?'selected':''}>${MOIS[m%100]} ${Math.floor(m/100)}</option>`).join('');
-  const rows = live.filter(b => S.pivMonth==='all' || monthKey(b.date)===+S.pivMonth);
-  const g = {}; rows.forEach(b => { const k = b.agence || '(no agency)'; (g[k] ||= {e:0,n:0,d:0}); g[k].e += +b.estime||0; g[k].n++; g[k].d += (b.heures||0)/60; });
-  const list = Object.entries(g).sort((a,b)=>b[1].e-a[1].e);
-  const T = list.reduce((s,[,v]) => ({e:s.e+v.e, n:s.n+v.n, d:s.d+v.d}), {e:0,n:0,d:0});
-  $('pivot').innerHTML = `<thead><tr><th>Agence</th><th class="r">Fittings</th><th class="r">Hours</th><th class="r">Estimé</th></tr></thead><tbody>` +
-    (list.length ? list.map(([k,v]) => `<tr><td>${esc(k)}</td><td class="r num">${v.n}</td><td class="r num">${Math.round(v.d)}</td><td class="r num">${eur(v.e)}</td></tr>`).join('') : `<tr><td colspan="4" class="empty">No confirmed fittings.</td></tr>`) +
-    `</tbody><tfoot><tr><td>Total</td><td class="r num">${T.n}</td><td class="r num">${Math.round(T.d)}</td><td class="r num">${eur(T.e)}</td></tr></tfoot>`;
-}
-
 /* ---------- Events ---------- */
 document.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b){ S.tab = b.dataset.tab; render(); } };
 $('prevW').onclick = () => { S.week = addDays(S.week,-7); S.days=null; render(); };
@@ -765,8 +689,6 @@ $('addRate').onclick = () => {
   $('newAg').value = $('newDay').value = $('newHalf').value = '';
   persist(); renderRows(); toast(`${ag} added`);
 };
-$('budgetIn').onchange = e => { S.budget = Math.max(0, +e.target.value || 0); persist(); renderCost(); };
-$('pivMonth').onchange = e => { S.pivMonth = e.target.value; renderCost(); };
 
 $('calFile').onchange = e => {
   const f = e.target.files[0]; e.target.value=''; if (!f) return;
