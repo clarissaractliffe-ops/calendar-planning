@@ -61,6 +61,18 @@ h3{font-size:14px;font-weight:600}
 .src .txt b{display:block;font-weight:600;font-size:13.5px}
 .src .txt span{display:block;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .src .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.help{position:relative;display:inline-flex}
+.help-btn{font:inherit;font-size:12px;font-weight:700;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--muted);background:var(--surface);color:var(--muted);cursor:help;display:grid;place-items:center;padding:0;line-height:1}
+.help-btn:hover,.help-btn:focus-visible,.help.open .help-btn{border-color:var(--accent);color:var(--accent)}
+.help-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.help-tip{position:absolute;right:-6px;top:calc(100% + 8px);z-index:20;width:min(380px,calc(100vw - 32px));background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.18);font-size:12.5px;line-height:1.5;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s;text-align:left;white-space:normal}
+.help-tip::before{content:"";position:absolute;top:-6px;right:12px;width:10px;height:10px;background:var(--surface);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.help:hover .help-tip,.help:focus-within .help-tip,.help.open .help-tip{opacity:1;visibility:visible;transform:none}
+.help-tip b{display:block;font-size:13px;margin-bottom:6px}
+.help-tip ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:reduce){.help-tip{transition:none}}
+.src{position:relative}
+@media (max-width:600px){.help{position:static}.help-tip{left:0;right:0;width:auto}.help-tip::before{display:none}}
 .note{margin:-6px 0 0;color:var(--muted);font-size:12.5px;max-width:100ch}
 
 .btn{font:inherit;font-weight:500;font-size:13.5px;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
@@ -214,7 +226,19 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
     <div class="src" id="srcCal">
       <span class="dot"></span>
       <div class="txt"><b>Outlook calendar</b><span id="calInfo">Sample fittings</span></div>
-      <div class="acts">
+      <div class="acts" style="align-items:center">
+        <span class="help" id="icsHelp">
+          <button type="button" class="help-btn" aria-label="How to get the .ics file from Outlook" aria-describedby="icsTip" aria-expanded="false">?</button>
+          <span class="help-tip" role="tooltip" id="icsTip">
+            <b>Outlook on the web or new Outlook (Mac or Windows)</b>
+            <ol>
+              <li>Open Outlook on the web (outlook.office.com) and click the gear icon → Calendar → Shared calendars.</li>
+              <li>Under Publish a calendar, choose Calendar and set the permission to Can view all details, so titles and locations are included. Then click Publish.</li>
+              <li>Two links appear. Copy the ICS link and paste it into your browser. A .ics file downloads.</li>
+              <li>In Fittings Planner, click Load .ics and pick that file.</li>
+            </ol>
+          </span>
+        </span>
         <label class="btn small primary" for="calFile">Load .ics</label>
         <input id="calFile" class="vh" type="file" accept=".ics,text/calendar">
       </div>
@@ -893,6 +917,14 @@ $('trFile').onchange = e => {
   };
   rd.readAsArrayBuffer(f);
 };
+
+/* ---------- Help tooltip (tap to open on touch screens) ---------- */
+(() => {
+  const wrap = $('icsHelp'), btn = wrap.querySelector('.help-btn');
+  btn.addEventListener('click', e => { e.stopPropagation(); const o = !wrap.classList.contains('open'); wrap.classList.toggle('open', o); btn.setAttribute('aria-expanded', o); });
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)){ wrap.classList.remove('open'); btn.setAttribute('aria-expanded','false'); } });
+  document.addEventListener('keydown', e => { if (e.key==='Escape'){ wrap.classList.remove('open'); btn.setAttribute('aria-expanded','false'); btn.blur(); } });
+})();
 
 /* ---------- Start ---------- */
 const smp = makeSample();
