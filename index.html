@@ -207,7 +207,7 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
     <div>
       <div class="eyebrow">RTW Development · Model fittings</div>
       <h1>Calendar Planning</h1>
-      <p class="lede">Marie's Outlook calendar becomes the WhatsApp planning message and ready-made rows for the model tracker, in the tracker's own columns.</p>
+      <p class="lede">Your Outlook calendar becomes the WhatsApp planning message and ready-made rows for the model tracker, in the tracker's own columns.</p>
     </div>
     <div class="resetwrap">
       <button class="btn small" id="resetAll" type="button">Reset</button>
@@ -315,7 +315,7 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
     <p class="prod"><b>How to paste:</b> in the tracker, open the 2026 sheet, click the first empty cell in column A, then paste (Cmd+V or Ctrl+V). Each row fills columns A to Y in the tracker's order. Année and Période are pasted as values. Réel, Réf facture, the Finance columns (Q to V) and Heure supp are left empty, to be filled in the tracker.</p>
   </section>
 
-  <p class="prod"><b>In the real version</b>, the planner would read Marie's Outlook calendar and add the new rows to the tracker on SharePoint directly, with no copy and paste. That needs IT to approve access to Microsoft 365 (Graph API or Power Automate).</p>
+  <p class="prod"><b>In the real version</b>, the planner would read the Outlook calendar and add the new rows to the tracker on SharePoint directly, with no copy and paste. That needs IT to approve access to Microsoft 365 (Graph API or Power Automate).</p>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -470,7 +470,7 @@ function load(rows, file, copiedSeed, empty){
   COPIED = store.get(K()+'-copied', copiedSeed || {}); EDITS = store.get(K()+'-edits', {});
   RATES = store.get('fp3-rates-'+(file?'real':'sample'), file ? {} : {...SAMPLE_RATES});
   S.budget = store.get('fp3-budget', 1200000);
-  // agencies seen in the calendar get a rate line, empty until Marie fills it
+  // agencies seen in the calendar get a rate line, empty until it is filled in
   rows.forEach(b => { if (b.agence && !RATES[b.agence]) RATES[b.agence] = {day:null, half:null}; });
   applyEdits();
   rows.forEach(b => { if (b.estime==null || b.estime==='') b.estime = b.st==='A' ? 0 : rateFor(b.agence, b.heures); });
@@ -479,12 +479,12 @@ function load(rows, file, copiedSeed, empty){
   $('srcCal').classList.toggle('real', !!file);
   $('calInfo').textContent = empty ? 'No calendar loaded' : file ? `${file} · ${rows.length} events` : `Sample fittings · ${rows.length} events`;
   $('note').textContent = empty
-    ? 'No calendar loaded. Click Load .ics to import Marie\u2019s Outlook calendar, or Try sample .ics to see how it works.'
+    ? 'No calendar loaded. Click Load .ics to import your Outlook calendar, or Try sample .ics to see how it works.'
     : file === 'Sample_Outlook_calendar_fittings.ics'
-    ? 'Showing the sample .ics: invented fittings, loaded exactly as a real Outlook export would be. Click Load .ics to use Marie\u2019s real calendar.'
+    ? 'Showing the sample .ics: invented fittings, loaded exactly as a real Outlook export would be. Click Load .ics to use your real calendar.'
     : file
     ? 'Your calendar was read in this browser and was not uploaded. Your edits, day rates and which rows were copied are saved in this browser only.'
-    : 'Showing invented fittings. Load Marie’s Outlook calendar (.ics) to use the real one; it is read in this browser and not uploaded. Rows up to last Wednesday are shown as already copied, to show how that works.';
+    : 'Showing invented fittings. Load your Outlook calendar (.ics) to use the real one; it is read in this browser and not uploaded. Rows up to last Wednesday are shown as already copied, to show how that works.';
   defaultSel(); render();
 }
 
