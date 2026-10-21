@@ -275,7 +275,6 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
       <div class="chat"><div class="bubble" id="bubble"></div></div>
       <div class="actions">
         <button class="btn primary" id="copyMsg" type="button">Copy message</button>
-        <a class="btn" id="waLink" href="#" target="_blank" rel="noopener">Open in WhatsApp</a>
       </div>
       <p class="fmt">Each line: <code id="fmtLine">name &gt; time &gt; purpose &gt; location &gt; team</code></p>
     </div>
@@ -532,7 +531,6 @@ function renderPlan(){
   renderFields();
   const msg = buildMsg();
   $('bubble').innerHTML = msg ? esc(msg).replace(/\*([^*\n]+)\*/g,'<b>$1</b>') : '<span style="opacity:.7">Select meetings to build the message.</span>';
-  $('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
   $('copyMsg').disabled = !msg;
 }
 /* Message fields: chosen by clicking, in click order, saved in this browser */
