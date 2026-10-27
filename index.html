@@ -153,23 +153,34 @@ code{font-family:var(--f-mono);font-size:11.5px;background:var(--sunk);padding:1
 .yt-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:900px){.yt-two{grid-template-columns:minmax(0,1fr)}}
 .ygrid{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
-table.yt{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:11px}
+.ygrid{--g-line:#C8C8C8;--g-hdr:#D9D9D9;--g-ink:#1A1A1A;background:#FFFFFF;color:var(--g-ink)}
+table.yt{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:11px;background:#FFFFFF;color:var(--g-ink)}
 table.yt col{width:30px}
 table.yt col.lab{width:96px}
-table.yt th.lab{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--ink);padding:0 8px;border-right:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none}
-table.yt td{padding:0;text-align:center;white-space:nowrap;border:0;font-variant-numeric:tabular-nums}
-table.yt tr.hd td{height:22px;color:var(--muted);border-right:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
-table.yt tr.hd td.yr{text-align:left;padding-left:6px;font-weight:700;color:var(--ink)}
-table.yt tr.hd td.wk,table.yt tr.hd td.mo{font-weight:700;color:var(--ink);border-right:1px solid var(--line);overflow:hidden;text-overflow:ellipsis}
-table.yt tr.hd td.mo{background:var(--accent-soft);text-align:left}
-table.yt tr.gap td,table.yt tr.gap th{height:8px}
-table.yt td.we{background:var(--wkend)}
-table.yt tr.hd td.today{box-shadow:inset 0 0 0 2px var(--accent);color:var(--ink);font-weight:700}
-table.yt tr.bd td.today{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+table.yt th.lab{position:sticky;left:0;z-index:2;background:#FFFFFF;color:#1A1A1A;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:0 8px;border-right:2px solid #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.yt td{padding:0;text-align:center;white-space:nowrap;border:0;font-variant-numeric:tabular-nums;color:#1A1A1A}
+table.yt td.mon{border-left:2px solid #000}
+table.yt tr.hd td{height:22px;background:var(--g-hdr);border-right:1px solid #BDBDBD}
+table.yt tr.hd.hgap td{height:6px}
+table.yt tr.hd.top td,table.yt tr.hd.top th{border-top:2px solid #000}
+table.yt tr.hd.bot td,table.yt tr.hd.bot th{border-bottom:2px solid #000}
+table.yt tr.hd td.yr{text-align:left;font-weight:700}
+table.yt tr.hd td.wk,table.yt tr.hd td.mo{font-weight:700;overflow:hidden;text-overflow:ellipsis}
+table.yt tr.hd td.mo{text-align:left}
 table.yt td.yr span,table.yt td.mo span{position:sticky;left:104px;padding:0 4px}
-table.yt tr.bd td,table.yt tr.bd th{height:46px;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}
-table.yt tr.bd td.we{background:color-mix(in srgb,var(--wkend) 55%,transparent)}
-table.yt td.yev{background:var(--evt);color:var(--evt-ink);border:1px solid var(--evt-line);font-size:8.5px;line-height:1.15;white-space:pre-line;overflow:hidden;vertical-align:top;padding:2px 1px;word-break:break-word}
+table.yt tr.gap td,table.yt tr.gap th{height:8px;background:#FFFFFF}
+table.yt tr.bd td,table.yt tr.bd th{height:46px;border-right:1px solid #E1E1E1;border-bottom:1px solid #E1E1E1}
+table.yt tr.bd th.lab{color:#1A1A1A}
+table.yt tr.gtop td,table.yt tr.gtop th{border-top:2px solid #000}
+table.yt tr.gbot td,table.yt tr.gbot th{border-bottom:2px solid #000}
+table.yt td.we{background:var(--g-hdr)}
+table.yt td.ooo:not(.noh){background:repeating-linear-gradient(135deg,#000 0 1px,#FFFFFF 1px 4px)}
+table.yt tr.hd td.ooo{background:repeating-linear-gradient(135deg,rgba(0,0,0,.45) 0 1px,var(--g-hdr) 1px 5px)}
+table.yt tr.hd td.today{box-shadow:inset 0 0 0 2px #2D4775;font-weight:700}
+table.yt tr.bd td.today:not(.ooo):not(.we){background:#EEF2F9}
+table.yt td.yev{color:#1A1A1A;font-size:8.5px;line-height:1.15;white-space:pre-line;overflow:hidden;vertical-align:top;padding:2px 1px;word-break:break-word;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+.ykey{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:10px}
+.ykey i{display:inline-block;width:14px;height:12px;border:1px solid #888;margin-right:6px;vertical-align:-2px}
 .unl{margin:0 0 8px;padding-left:18px;columns:2;column-gap:24px;font-size:13px}
 .rules{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:6px;color:var(--ink)}
 .rules li span{color:var(--muted)}
@@ -355,6 +366,7 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
     <div class="panel">
       <div class="head"><div><h2>Year template</h2><div class="sub">28 Sep 2026 to 31 Dec 2027, one column per day. Exported as YEAR_TEMPLATE_AGENDA.xlsx with the same layout.</div></div><button class="btn small" id="yrToday" type="button">Go to today</button></div>
       <div class="ygrid" id="yrGrid"></div>
+      <div class="ykey"><span><i style="background:#92D050"></i>PRECO</span><span><i style="background:#CC66CC"></i>SHOW</span><span><i style="background:#FFFF66"></i>PAULA</span><span><i style="background:#D6EDBF"></i>Lighter shade: tentative in Outlook</span><span><i style="background:#D9D9D9"></i>Weekend</span><span><i style="background:repeating-linear-gradient(135deg,#000 0 1px,#fff 1px 4px)"></i>J&amp;L out of office</span></div>
     </div>
     <div class="yt-two">
       <div class="panel">
@@ -829,7 +841,7 @@ $('dlSample').onclick = () => {
 };
 
 /* Invented year agenda, to try the Year template without a file */
-const SAMPLE_YEAR_ICS = "BEGIN:VCALENDAR\nPRODID:-//Microsoft Corporation//Outlook 16.0 MIMEDIR//EN\nVERSION:2.0\nMETHOD:PUBLISH\nX-WR-CALNAME:Agenda (SAMPLE \u2013 invented)\nBEGIN:VTIMEZONE\nTZID:Romance Standard Time\nBEGIN:STANDARD\nDTSTART:16011028T030000\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10\nTZOFFSETFROM:+0200\nTZOFFSETTO:+0100\nEND:STANDARD\nBEGIN:DAYLIGHT\nDTSTART:16010325T020000\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3\nTZOFFSETFROM:+0100\nTZOFFSETTO:+0200\nEND:DAYLIGHT\nEND:VTIMEZONE\nBEGIN:VEVENT\nUID:sample-agenda-001@example.invalid\nSUMMARY:Toussaint\nDTSTART;VALUE=DATE:20261102\nDTEND;VALUE=DATE:20261105\nCATEGORIES:J&L OOO\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-002@example.invalid\nSUMMARY:Christmas break\nDTSTART;VALUE=DATE:20261221\nDTEND;VALUE=DATE:20270102\nCATEGORIES:J&L OOO\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-003@example.invalid\nSUMMARY:J&L OOO: Easter\nDTSTART;VALUE=DATE:20270329\nDTEND;VALUE=DATE:20270403\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-004@example.invalid\nSUMMARY:J&L OOO: Summer\nDTSTART;VALUE=DATE:20270802\nDTEND;VALUE=DATE:20270821\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-005@example.invalid\nSUMMARY:SS PRECO: Kick-off\nDTSTART;TZID=Romance Standard Time:20261005T100000\nDTEND;TZID=Romance Standard Time:20261005T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-006@example.invalid\nSUMMARY:SS PRECO: Design review\nDTSTART;TZID=Romance Standard Time:20261019T140000\nDTEND;TZID=Romance Standard Time:20261019T170000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-007@example.invalid\nSUMMARY:SS PRECO | C&Pr Review\nDTSTART;TZID=Romance Standard Time:20261109T100000\nDTEND;TZID=Romance Standard Time:20261109T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-008@example.invalid\nSUMMARY:SS PRECO: Fitting 1\nDTSTART;VALUE=DATE:20261123\nDTEND;VALUE=DATE:20261126\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-009@example.invalid\nSUMMARY:SS PRECO: Fitting 2\nDTSTART;VALUE=DATE:20261207\nDTEND;VALUE=DATE:20261209\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-010@example.invalid\nSUMMARY:SS PRECO: Line freeze\nDTSTART;VALUE=DATE:20270115\nDTEND;VALUE=DATE:20270116\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-011@example.invalid\nSUMMARY:SS PRECO 2: Merch review\nDTSTART;TZID=Romance Standard Time:20261123T100000\nDTEND;TZID=Romance Standard Time:20261123T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-012@example.invalid\nSUMMARY:SS PRECO 2: Pricing\nDTSTART;VALUE=DATE:20270111\nDTEND;VALUE=DATE:20270112\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-013@example.invalid\nSUMMARY:Costing check\nDTSTART;TZID=Romance Standard Time:20270104T100000\nDTEND;TZID=Romance Standard Time:20270104T120000\nCATEGORIES:FW PRECO\nRRULE:FREQ=MONTHLY;BYDAY=1MO;UNTIL=20270630T235959Z\nEXDATE;TZID=Romance Standard Time:20270405T100000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-014@example.invalid\nSUMMARY:FW PRECO: Kick-off\nDTSTART;VALUE=DATE:20270301\nDTEND;VALUE=DATE:20270302\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-015@example.invalid\nSUMMARY:FW PRECO: Fitting 1\nDTSTART;VALUE=DATE:20270419\nDTEND;VALUE=DATE:20270422\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-016@example.invalid\nSUMMARY:FW PRECO: Fitting 2\nDTSTART;VALUE=DATE:20270517\nDTEND;VALUE=DATE:20270519\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-017@example.invalid\nSUMMARY:Design meeting\nDTSTART;TZID=Romance Standard Time:20261001T100000\nDTEND;TZID=Romance Standard Time:20261001T120000\nCATEGORIES:SS SHOW\nRRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=TH;COUNT=10\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-017@example.invalid\nRECURRENCE-ID;TZID=Romance Standard Time:20261029T100000\nSUMMARY:Design meeting (moved)\nDTSTART;TZID=Romance Standard Time:20261030T100000\nDTEND;TZID=Romance Standard Time:20261030T120000\nCATEGORIES:SS SHOW\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-018@example.invalid\nSUMMARY:SS SHOW: Show\nDTSTART;VALUE=DATE:20270122\nDTEND;VALUE=DATE:20270125\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-019@example.invalid\nSUMMARY:SS SHOW: Showroom\nDTSTART;VALUE=DATE:20270125\nDTEND;VALUE=DATE:20270206\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-020@example.invalid\nSUMMARY:FW SHOW: Kick-off\nDTSTART;TZID=Romance Standard Time:20270405T100000\nDTEND;TZID=Romance Standard Time:20270405T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-021@example.invalid\nSUMMARY:FW SHOW: Show\nDTSTART;VALUE=DATE:20270625\nDTEND;VALUE=DATE:20270628\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-022@example.invalid\nSUMMARY:FW SHOW: Showroom\nDTSTART;VALUE=DATE:20270628\nDTEND;VALUE=DATE:20270710\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-023@example.invalid\nSUMMARY:PAULA: Merch fitting\nDTSTART;VALUE=DATE:20270215\nDTEND;VALUE=DATE:20270217\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-024@example.invalid\nSUMMARY:Line review\nDTSTART;TZID=Romance Standard Time:20270503T100000\nDTEND;TZID=Romance Standard Time:20270503T120000\nCATEGORIES:PAULA\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20270602T000000Z\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-025@example.invalid\nSUMMARY:Team lunch\nDTSTART;TZID=Romance Standard Time:20261016T100000\nDTEND;TZID=Romance Standard Time:20261016T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-026@example.invalid\nSUMMARY:Budget meeting\nDTSTART;TZID=Romance Standard Time:20261203T100000\nDTEND;TZID=Romance Standard Time:20261203T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-027@example.invalid\nSUMMARY:SS PRECO: Old review\nDTSTART;TZID=Romance Standard Time:20261012T100000\nDTEND;TZID=Romance Standard Time:20261012T120000\nSTATUS:CANCELLED\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nEND:VCALENDAR\n";
+const SAMPLE_YEAR_ICS = "BEGIN:VCALENDAR\r\nPRODID:-//Microsoft Corporation//Outlook 16.0 MIMEDIR//EN\r\nVERSION:2.0\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:Agenda (SAMPLE \u2013 invented)\r\nBEGIN:VTIMEZONE\r\nTZID:Romance Standard Time\r\nBEGIN:STANDARD\r\nDTSTART:16011028T030000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+0100\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:16010325T020000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3\r\nTZOFFSETFROM:+0100\r\nTZOFFSETTO:+0200\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\nBEGIN:VEVENT\r\nUID:sample-agenda-001@example.invalid\r\nSUMMARY:Toussaint\r\nDTSTART;VALUE=DATE:20261102\r\nDTEND;VALUE=DATE:20261105\r\nCATEGORIES:J&L OOO\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-002@example.invalid\r\nSUMMARY:Christmas break\r\nDTSTART;VALUE=DATE:20261221\r\nDTEND;VALUE=DATE:20270102\r\nCATEGORIES:J&L OOO\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-003@example.invalid\r\nSUMMARY:J&L OOO: Easter\r\nDTSTART;VALUE=DATE:20270329\r\nDTEND;VALUE=DATE:20270403\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-004@example.invalid\r\nSUMMARY:J&L OOO: Summer\r\nDTSTART;VALUE=DATE:20270802\r\nDTEND;VALUE=DATE:20270821\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-005@example.invalid\r\nSUMMARY:SS PRECO: Kick-off\r\nDTSTART;TZID=Romance Standard Time:20261005T100000\r\nDTEND;TZID=Romance Standard Time:20261005T120000\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-006@example.invalid\r\nSUMMARY:SS PRECO: Design review\r\nDTSTART;TZID=Romance Standard Time:20261019T140000\r\nDTEND;TZID=Romance Standard Time:20261019T170000\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-007@example.invalid\r\nSUMMARY:SS PRECO | C&Pr Review\r\nDTSTART;TZID=Romance Standard Time:20261109T100000\r\nDTEND;TZID=Romance Standard Time:20261109T120000\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-008@example.invalid\r\nSUMMARY:SS PRECO: Fitting 1\r\nDTSTART;VALUE=DATE:20261123\r\nDTEND;VALUE=DATE:20261126\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-009@example.invalid\r\nSUMMARY:SS PRECO: Fitting 2\r\nDTSTART;VALUE=DATE:20261207\r\nDTEND;VALUE=DATE:20261209\r\nDTSTAMP:20261027T090000Z\r\nSTATUS:TENTATIVE\r\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-010@example.invalid\r\nSUMMARY:SS PRECO: Line freeze\r\nDTSTART;VALUE=DATE:20270115\r\nDTEND;VALUE=DATE:20270116\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-011@example.invalid\r\nSUMMARY:SS PRECO 2: Merch review\r\nDTSTART;TZID=Romance Standard Time:20261123T100000\r\nDTEND;TZID=Romance Standard Time:20261123T120000\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-012@example.invalid\r\nSUMMARY:SS PRECO 2: Pricing\r\nDTSTART;VALUE=DATE:20270111\r\nDTEND;VALUE=DATE:20270112\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-013@example.invalid\r\nSUMMARY:Costing check\r\nDTSTART;TZID=Romance Standard Time:20270104T100000\r\nDTEND;TZID=Romance Standard Time:20270104T120000\r\nCATEGORIES:FW PRECO\r\nRRULE:FREQ=MONTHLY;BYDAY=1MO;UNTIL=20270630T235959Z\r\nEXDATE;TZID=Romance Standard Time:20270405T100000\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-014@example.invalid\r\nSUMMARY:FW PRECO: Kick-off\r\nDTSTART;VALUE=DATE:20270301\r\nDTEND;VALUE=DATE:20270302\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-015@example.invalid\r\nSUMMARY:FW PRECO: Fitting 1\r\nDTSTART;VALUE=DATE:20270419\r\nDTEND;VALUE=DATE:20270422\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-016@example.invalid\r\nSUMMARY:FW PRECO: Fitting 2\r\nDTSTART;VALUE=DATE:20270517\r\nDTEND;VALUE=DATE:20270519\r\nDTSTAMP:20261027T090000Z\r\nSTATUS:TENTATIVE\r\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-017@example.invalid\r\nSUMMARY:Design meeting\r\nDTSTART;TZID=Romance Standard Time:20261001T100000\r\nDTEND;TZID=Romance Standard Time:20261001T120000\r\nCATEGORIES:SS SHOW\r\nRRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=TH;COUNT=10\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-017@example.invalid\r\nRECURRENCE-ID;TZID=Romance Standard Time:20261029T100000\r\nSUMMARY:Design meeting (moved)\r\nDTSTART;TZID=Romance Standard Time:20261030T100000\r\nDTEND;TZID=Romance Standard Time:20261030T120000\r\nCATEGORIES:SS SHOW\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-018@example.invalid\r\nSUMMARY:SS SHOW: Show\r\nDTSTART;VALUE=DATE:20270122\r\nDTEND;VALUE=DATE:20270125\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-019@example.invalid\r\nSUMMARY:SS SHOW: Showroom\r\nDTSTART;VALUE=DATE:20270125\r\nDTEND;VALUE=DATE:20270206\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-020@example.invalid\r\nSUMMARY:FW SHOW: Kick-off\r\nDTSTART;TZID=Romance Standard Time:20270405T100000\r\nDTEND;TZID=Romance Standard Time:20270405T120000\r\nDTSTAMP:20261027T090000Z\r\nSTATUS:TENTATIVE\r\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-021@example.invalid\r\nSUMMARY:FW SHOW: Show\r\nDTSTART;VALUE=DATE:20270625\r\nDTEND;VALUE=DATE:20270628\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-022@example.invalid\r\nSUMMARY:FW SHOW: Showroom\r\nDTSTART;VALUE=DATE:20270628\r\nDTEND;VALUE=DATE:20270710\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-023@example.invalid\r\nSUMMARY:PAULA: Merch fitting\r\nDTSTART;VALUE=DATE:20270215\r\nDTEND;VALUE=DATE:20270217\r\nDTSTAMP:20261027T090000Z\r\nSTATUS:TENTATIVE\r\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-024@example.invalid\r\nSUMMARY:Line review\r\nDTSTART;TZID=Romance Standard Time:20270503T100000\r\nDTEND;TZID=Romance Standard Time:20270503T120000\r\nCATEGORIES:PAULA\r\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20270602T000000Z\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-025@example.invalid\r\nSUMMARY:Team lunch\r\nDTSTART;TZID=Romance Standard Time:20261016T100000\r\nDTEND;TZID=Romance Standard Time:20261016T120000\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-026@example.invalid\r\nSUMMARY:Budget meeting\r\nDTSTART;TZID=Romance Standard Time:20261203T100000\r\nDTEND;TZID=Romance Standard Time:20261203T120000\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:sample-agenda-027@example.invalid\r\nSUMMARY:SS PRECO: Old review\r\nDTSTART;TZID=Romance Standard Time:20261012T100000\r\nDTEND;TZID=Romance Standard Time:20261012T120000\r\nSTATUS:CANCELLED\r\nDTSTAMP:20261027T090000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
 /* ---------- Year template (agenda grid from the .ics, exported to Excel) ---------- */
 const YT_START = new Date(2026, 8, 28), YT_END = new Date(2027, 11, 31);
 // key -> label in column A (null = spacer row, "" = unlabelled row)
@@ -841,6 +853,10 @@ const YT_BODY = [
   ['FW SHOW','FW SHOW'], [null,null],
   ['PAULA','PAULA']
 ];
+/* Colour scheme: PRECO rows green, SHOW rows magenta, PAULA yellow; J&L OOO days hatched across the grid.
+   solid = confirmed, tint = tentative (Outlook "Tentative") */
+const YT_PAL = {green:{solid:'92D050', tint:'D6EDBF'}, magenta:{solid:'CC66CC', tint:'EDC2EA'}, yellow:{solid:'FFFF66', tint:'FFFFC2'}, ooo:{solid:'D9D9D9', tint:'EDEDED'}};
+const YT_ROWPAL = {'J&L OOO':'ooo', 'SS PRECO':'green', 'SS PRECO 2':'green', 'FW PRECO':'green', 'SS SHOW':'magenta', 'FW SHOW':'magenta', 'PAULA':'yellow'};
 const YT_KEYS = Object.fromEntries(YT_BODY.filter(r => r[0]).map(r => [r[0].toUpperCase(), r[0]]));
 const YT_EXCELJS = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
 const YT_MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
@@ -863,6 +879,7 @@ function ytParse(text){
     if (K==='SUMMARY') cur.summary = unesc(v).trim();
     else if (K==='UID') cur.uid = v.trim();
     else if (K==='STATUS') cur.status = v.trim().toUpperCase();
+    else if (K==='X-MICROSOFT-CDO-BUSYSTATUS') cur.busy = v.trim().toUpperCase();
     else if (K==='CATEGORIES') cur.cats.push(...v.split(/(?<!\\),/).map(x => unesc(x).trim()).filter(Boolean));
     else if (K==='DTSTART') cur.start = ytDT(p, v);
     else if (K==='DTEND') cur.end = ytDT(p, v);
@@ -991,7 +1008,7 @@ function ytBuild(text){
   // overrides whose series master is missing
   raw.filter(e => e.recurId && !masters.some(m => m.uid === e.uid)).forEach(o => occ.push({ev:o, s:o.start, e:o.end || o.start}));
 
-  const cells = {}, unmatched = new Set(); let placed = 0, cancelled = 0;
+  const cells = {}, firm = {}, unmatched = new Set(); let placed = 0, cancelled = 0;
   for (const {ev, s, e} of occ){
     if (ev.status === 'CANCELLED'){ cancelled++; continue; }
     const [key, txt] = ytResolve(ev);
@@ -1003,12 +1020,14 @@ function ytBuild(text){
     if (last < YT_START || sd > YT_END) continue;                               // out of range
     if (!key){ unmatched.add(txt); continue; }
     placed++;
+    const tent = ev.status === 'TENTATIVE' || ev.busy === 'TENTATIVE';
     for (let d = sd; d <= last; d = ytAddDays(d, 1)){
       if (d < YT_START || d > YT_END) continue;
       ((cells[key] ||= {})[dkey(d)] ||= []).push(txt);
+      if (!tent) (firm[key] ||= {})[dkey(d)] = true;   // a day is shown solid if any event on it is confirmed
     }
   }
-  return {cells, unmatched:[...unmatched].sort((a,b) => a.localeCompare(b)), placed, cancelled, total: raw.length};
+  return {cells, firm, unmatched:[...unmatched].sort((a,b) => a.localeCompare(b)), placed, cancelled, total: raw.length};
 }
 
 function ytDays(){ const out = []; for (let d = new Date(YT_START); d <= YT_END; d = ytAddDays(d, 1)) out.push(d); return out; }
@@ -1040,22 +1059,31 @@ function renderYear(){
   const r = Y.result;
   $('yrInfo').innerHTML = `${esc(src.name)}<small>${r.placed} event${r.placed===1?'':'s'} placed${r.unmatched.length ? `, ${r.unmatched.length} not placed (see below)` : ''}${r.cancelled ? `, ${r.cancelled} cancelled skipped` : ''}.</small>`;
   const days = ytDays(), t0 = dkey(today0());
-  const tcls = d => (d.getDay()===0 || d.getDay()===6 ? 'we ' : '') + (dkey(d)===t0 ? 'today' : '');
+  const ooo = r.cells['J&L OOO'] || {};
+  const dcls = d => [(d.getDay()===0 || d.getDay()===6) ? 'we' : '', ooo[dkey(d)] ? 'ooo' : '', d.getDay()===1 ? 'mon' : '', dkey(d)===t0 ? 'today' : ''].join(' ');
   let h = `<table class="yt" style="width:${96 + days.length*30}px"><colgroup>` + '<col class="lab">' + days.map(() => '<col>').join('') + '</colgroup><tbody>';
-  // YEAR
-  h += '<tr class="hd"><th class="lab">YEAR</th>' + ytSpans(days, d => d.getFullYear()).map(([y,c1,c2]) => `<td colspan="${c2-c1+1}" class="yr"><span>${y}</span></td>`).join('') + '</tr>';
-  h += `<tr class="gap"><th class="lab"></th><td colspan="${days.length}"></td></tr>`;
-  h += '<tr class="hd"><th class="lab">WEEK</th>' + ytSpans(days, d => ytIsoWeek(d)).map(([[,w],c1,c2]) => `<td colspan="${c2-c1+1}" class="wk">${w}</td>`).join('') + '</tr>';
-  h += `<tr class="gap"><th class="lab"></th><td colspan="${days.length}"></td></tr>`;
-  h += '<tr class="hd"><th class="lab">MONTH</th>' + ytSpans(days, d => [d.getFullYear(), d.getMonth()]).map(([[y,m],c1,c2]) => `<td colspan="${c2-c1+1}" class="mo"><span>${YT_MONTHS[m]}${(y===YT_END.getFullYear() && m===11) ? ' ' + y : ''}</span></td>`).join('') + '</tr>';
-  h += '<tr class="hd" id="ytDayRow"><th class="lab">DAY</th>' + days.map(d => `<td class="dn ${tcls(d)}">${d.getDate()}</td>`).join('') + '</tr>';
-  h += '<tr class="hd"><th class="lab"></th>' + days.map(d => `<td class="dn ${tcls(d)}">${'MTWTFSS'[(d.getDay()+6)%7]}</td>`).join('') + '</tr>';
-  h += `<tr class="gap"><th class="lab"></th><td colspan="${days.length}"></td></tr>`;
-  for (const [key, label] of YT_BODY){
-    if (key === null){ h += `<tr class="gap"><th class="lab"></th><td colspan="${days.length}"></td></tr>`; continue; }
-    const row = r.cells[key] || {};
-    h += `<tr class="bd"><th class="lab" title="${esc(key)}">${esc(label)}</th>` + days.map(d => { const tx = row[dkey(d)]; return tx ? `<td class="yev" title="${esc(dayLbl(d) + ': ' + tx.join(' / '))}">${esc(tx.join('\n'))}</td>` : `<td class="${tcls(d)}"></td>`; }).join('') + '</tr>';
-  }
+  const gap = cls => `<tr class="${cls}"><th class="lab"></th>` + days.map(d => `<td class="${d.getDay()===1 ? 'mon' : ''}"></td>`).join('') + '</tr>';
+  // header block (grey)
+  h += '<tr class="hd top"><th class="lab">YEAR</th>' + ytSpans(days, d => d.getFullYear()).map(([y,c1,c2]) => `<td colspan="${c2-c1+1}" class="yr ${days[c1].getDay()===1?'mon':''}"><span>${y}</span></td>`).join('') + '</tr>';
+  h += gap('hd hgap');
+  h += '<tr class="hd"><th class="lab">WEEK</th>' + ytSpans(days, d => ytIsoWeek(d)).map(([[,w],c1,c2]) => `<td colspan="${c2-c1+1}" class="wk mon">${w}</td>`).join('') + '</tr>';
+  h += gap('hd hgap');
+  h += '<tr class="hd"><th class="lab">MONTH</th>' + ytSpans(days, d => [d.getFullYear(), d.getMonth()]).map(([[y,m],c1,c2]) => `<td colspan="${c2-c1+1}" class="mo ${days[c1].getDay()===1?'mon':''}"><span>${YT_MONTHS[m]}${(y===YT_END.getFullYear() && m===11) ? ' ' + y : ''}</span></td>`).join('') + '</tr>';
+  h += '<tr class="hd" id="ytDayRow"><th class="lab">DAY</th>' + days.map(d => `<td class="dn ${dcls(d)}">${d.getDate()}</td>`).join('') + '</tr>';
+  h += '<tr class="hd bot"><th class="lab"></th>' + days.map(d => `<td class="dn ${dcls(d)}">${'MTWTFSS'[(d.getDay()+6)%7]}</td>`).join('') + '</tr>';
+  h += gap('gap');
+  // body rows, boxed per group (rows between spacers)
+  YT_BODY.forEach(([key, label], i) => {
+    if (key === null){ h += gap('gap'); return; }
+    const first = i === 0 || YT_BODY[i-1][0] === null, lastR = i === YT_BODY.length-1 || YT_BODY[i+1][0] === null;
+    const pal = YT_PAL[YT_ROWPAL[key]] || YT_PAL.ooo, isOoo = key === 'J&L OOO';
+    const row = r.cells[key] || {}, firmR = (r.firm && r.firm[key]) || {};
+    h += `<tr class="bd ${first?'gtop':''} ${lastR?'gbot':''}"><th class="lab" style="background:#${pal.solid}" title="${esc(key)}">${esc(label)}</th>` + days.map(d => {
+      const k = dkey(d), tx = row[k];
+      if (tx){ const fill = firmR[k] ? pal.solid : pal.tint; return `<td class="yev ${d.getDay()===1?'mon':''}" style="background:#${fill}" title="${esc(dayLbl(d) + ': ' + tx.join(' / ') + (firmR[k] ? '' : ' (tentative)'))}">${esc(tx.join('\n'))}</td>`; }
+      return `<td class="${dcls(d)}${isOoo ? ' noh' : ''}"></td>`;
+    }).join('') + '</tr>';
+  });
   $('yrGrid').innerHTML = h + '</tbody></table>';
   $('yrUnCt').textContent = r.unmatched.length ? `(${r.unmatched.length})` : '';
   $('yrUnmatched').innerHTML = r.unmatched.length
@@ -1087,31 +1115,66 @@ async function ytExport(){
     ytSpans(days, d => d.getFullYear()).forEach(([y,c1]) => { const c = ws.getCell(R_YEAR, col(c1)); c.value = y; c.font = {bold:true}; });
     ytSpans(days, d => ytIsoWeek(d)).forEach(([[,w],c1,c2]) => spanMerge(R_WEEK, col(c1), col(c2), w));
     ytSpans(days, d => [d.getFullYear(), d.getMonth()]).forEach(([[y,m],c1,c2]) => spanMerge(R_MONTH, col(c1), col(c2), YT_MONTHS[m] + ((y===YT_END.getFullYear() && m===11) ? ' ' + y : '')));
-    const grey = {type:'pattern', pattern:'solid', fgColor:{argb:'FFD9D9D9'}};
+    const solid = hex => ({type:'pattern', pattern:'solid', fgColor:{argb:'FF' + hex}});
+    const GREY = solid('D9D9D9');
+    const HATCH = {type:'pattern', pattern:'lightUp', fgColor:{argb:'FF000000'}, bgColor:{argb:'FFFFFFFF'}};
+    const HATCH_HDR = {type:'pattern', pattern:'lightUp', fgColor:{argb:'FF000000'}, bgColor:{argb:'FFD9D9D9'}};
+    const thinG = {style:'thin', color:{argb:'FFBFBFBF'}}, lightG = {style:'thin', color:{argb:'FFE1E1E1'}}, black = {style:'medium', color:{argb:'FF000000'}};
+    const ooo = r.cells['J&L OOO'] || {};
+    const lastCol = col(days.length - 1);
+    // body row numbers and groups (rows between spacers are boxed)
+    const bodyRows = []; { let rr = R_BODY; YT_BODY.forEach(([key], i) => { if (key === null){ rr++; return; } bodyRows.push({key, label: YT_BODY[i][1], row: rr, first: i === 0 || YT_BODY[i-1][0] === null, last: i === YT_BODY.length-1 || YT_BODY[i+1][0] === null}); rr++; }); }
+    const lastRow = bodyRows[bodyRows.length-1].row;
+    // header block: grey from row 2 to row 8
+    for (let rr = R_YEAR; rr <= R_WD; rr++) for (let c = 2; c <= lastCol; c++){ const cell = ws.getCell(rr, c); cell.fill = GREY; }
     days.forEach((d, i) => {
       const c = col(i);
       const a = ws.getCell(R_DAY, c); a.value = d.getDate(); a.alignment = center;
       const b = ws.getCell(R_WD, c); b.value = 'MTWTFSS'[(d.getDay()+6)%7]; b.alignment = center;
       ws.getColumn(c).width = 4.5;
-      if (d.getDay()===0 || d.getDay()===6){ a.fill = grey; b.fill = grey; }
+      if (ooo[dkey(d)]){ a.fill = HATCH_HDR; b.fill = HATCH_HDR; }
     });
-    const thin = {style:'thin', color:{argb:'FFBFBFBF'}};
-    let row = R_BODY;
-    for (const [key, label] of YT_BODY){
-      if (key === null){ row++; continue; }
-      if (label){ const lc = ws.getCell(row, 1); lc.value = label; lc.font = {bold:true}; }
-      const cells = r.cells[key] || {};
+    // body
+    for (const br of bodyRows){
+      const pal = YT_PAL[YT_ROWPAL[br.key]] || YT_PAL.ooo;
+      const lc = ws.getCell(br.row, 1); if (br.label){ lc.value = br.label; lc.font = {bold:true, color:{argb:'FF000000'}}; } lc.fill = solid(pal.solid); lc.alignment = {vertical:'middle'};
+      const cells = r.cells[br.key] || {}, firmR = (r.firm && r.firm[br.key]) || {};
       days.forEach((d, i) => {
-        const tx = cells[dkey(d)]; if (!tx) return;
-        const c = ws.getCell(row, col(i));
-        c.value = tx.join('\n');
-        c.alignment = {wrapText:true, vertical:'top', horizontal:'center'};
-        c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF2CC'}};
-        c.border = {left:thin, right:thin, top:thin, bottom:thin};
-        c.font = {size:8};
+        const k = dkey(d), c = ws.getCell(br.row, col(i)), tx = cells[k];
+        if (tx){
+          c.value = tx.join('\n');
+          c.alignment = {wrapText:true, vertical:'top', horizontal:'center'};
+          c.fill = solid(firmR[k] ? pal.solid : pal.tint);
+          c.font = {size:8, color:{argb:'FF000000'}};
+        } else if (ooo[k] && br.key !== 'J&L OOO') c.fill = HATCH;
+        else if (d.getDay()===0 || d.getDay()===6) c.fill = GREY;
       });
-      ws.getRow(row).height = 45;
-      row++;
+      ws.getRow(br.row).height = 45;
+    }
+    // spacer rows: thin
+    { let rr = R_BODY; YT_BODY.forEach(([key]) => { if (key === null) ws.getRow(rr).height = 6; rr++; }); }
+    // borders: light grid in the body, black box around the header block and each row group, black line before every Monday
+    const gtop = new Set(bodyRows.filter(b => b.first).map(b => b.row)), gbot = new Set(bodyRows.filter(b => b.last).map(b => b.row));
+    const isBody = new Set(bodyRows.map(b => b.row));
+    for (let rr = R_YEAR; rr <= lastRow; rr++){
+      const inHdr = rr <= R_WD, inBody = isBody.has(rr);
+      if (!inHdr && !inBody) { // spacer: only the Monday lines
+        days.forEach((d, i) => { if (d.getDay()===1){ const c = ws.getCell(rr, col(i)); c.border = {left:black}; } });
+        continue;
+      }
+      for (let c = 1; c <= lastCol; c++){
+        const d = c >= 2 ? days[c-2] : null, cell = ws.getCell(rr, c);
+        const bd = {};
+        if (c >= 2){ bd.right = inHdr ? (rr >= R_DAY ? thinG : undefined) : lightG; bd.bottom = inHdr ? undefined : lightG; }
+        if (c === 1) bd.right = black;
+        if (d && d.getDay()===1) bd.left = black;
+        if (c === lastCol) bd.right = black;
+        if ((inHdr && rr === R_YEAR) || gtop.has(rr)) bd.top = black;
+        if ((inHdr && rr === R_WD) || gbot.has(rr)) bd.bottom = black;
+        if (c === 1 && !inBody && !(inHdr && (rr === R_YEAR || rr === R_WD))) { delete bd.right; bd.right = black; }
+        Object.keys(bd).forEach(k => bd[k] === undefined && delete bd[k]);
+        cell.border = bd;
+      }
     }
     ws.getColumn(1).width = 14;
     const buf = await wb.xlsx.writeBuffer();
