@@ -17,6 +17,7 @@
   --accent:#2D4775; --accent-ink:#FFFFFF; --accent-soft:#DEE5F2;
   --good:#3D8A57; --warn:#C7861C; --crit:#B4473A; --tent:#8A6FB0;
   --todo:#D9E1F2; --done:#EEF0F3;
+  --evt:#FFF2CC; --evt-ink:#3A3115; --evt-line:#BFBFBF; --wkend:#E4E4E4;
   --wa-bg:#E6DED5; --wa-bubble:#D9FDD3; --wa-ink:#111B21;
   --f-display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -28,12 +29,14 @@
   --accent:#8FA9DA; --accent-ink:#0E1320; --accent-soft:#232E45;
   --good:#6DBB86; --warn:#E0A440; --crit:#E2796A; --tent:#B39BD8;
   --todo:#26324A; --done:#1B2029;
+  --evt:#4A3F1C; --evt-ink:#F5E9C4; --evt-line:#6B5E35; --wkend:#262B36;
   --wa-bg:#0B141A; --wa-bubble:#005C4B; --wa-ink:#E9EDEF; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10131A; --surface:#171B24; --sunk:#1F2430; --ink:#E5E8EF; --muted:#98A0B0; --line:#2A3040;
   --accent:#8FA9DA; --accent-ink:#0E1320; --accent-soft:#232E45;
   --good:#6DBB86; --warn:#E0A440; --crit:#E2796A; --tent:#B39BD8;
   --todo:#26324A; --done:#1B2029;
+  --evt:#4A3F1C; --evt-ink:#F5E9C4; --evt-line:#6B5E35; --wkend:#262B36;
   --wa-bg:#0B141A; --wa-bubble:#005C4B; --wa-ink:#E9EDEF; color-scheme:dark}
 
 *{box-sizing:border-box}
@@ -146,6 +149,30 @@ h3{font-size:14px;font-weight:600}
 .linkbtn{font:inherit;font-size:11.5px;border:0;background:none;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
 code{font-family:var(--f-mono);font-size:11.5px;background:var(--sunk);padding:1px 5px;border-radius:4px}
 
+/* Year template */
+.yt-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.yt-two{grid-template-columns:minmax(0,1fr)}}
+.ygrid{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table.yt{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:11px}
+table.yt col{width:30px}
+table.yt col.lab{width:96px}
+table.yt th.lab{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--ink);padding:0 8px;border-right:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none}
+table.yt td{padding:0;text-align:center;white-space:nowrap;border:0;font-variant-numeric:tabular-nums}
+table.yt tr.hd td{height:22px;color:var(--muted);border-right:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+table.yt tr.hd td.yr{text-align:left;padding-left:6px;font-weight:700;color:var(--ink)}
+table.yt tr.hd td.wk,table.yt tr.hd td.mo{font-weight:700;color:var(--ink);border-right:1px solid var(--line);overflow:hidden;text-overflow:ellipsis}
+table.yt tr.hd td.mo{background:var(--accent-soft);text-align:left}
+table.yt tr.gap td,table.yt tr.gap th{height:8px}
+table.yt td.we{background:var(--wkend)}
+table.yt tr.hd td.today{box-shadow:inset 0 0 0 2px var(--accent);color:var(--ink);font-weight:700}
+table.yt tr.bd td.today{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+table.yt td.yr span,table.yt td.mo span{position:sticky;left:104px;padding:0 4px}
+table.yt tr.bd td,table.yt tr.bd th{height:46px;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}
+table.yt tr.bd td.we{background:color-mix(in srgb,var(--wkend) 55%,transparent)}
+table.yt td.yev{background:var(--evt);color:var(--evt-ink);border:1px solid var(--evt-line);font-size:8.5px;line-height:1.15;white-space:pre-line;overflow:hidden;vertical-align:top;padding:2px 1px;word-break:break-word}
+.unl{margin:0 0 8px;padding-left:18px;columns:2;column-gap:24px;font-size:13px}
+.rules{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:6px;color:var(--ink)}
+.rules li span{color:var(--muted)}
 /* Tracker rows */
 .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
 .f{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -249,6 +276,7 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
     <div class="tabs" role="tablist" aria-label="Views">
       <button class="tab" role="tab" id="t-plan" data-tab="plan">Planning message</button>
       <button class="tab" role="tab" id="t-rows" data-tab="rows">Tracker rows<span class="ct" id="todoCt" hidden></span></button>
+      <button class="tab" role="tab" id="t-year" data-tab="year">Year template</button>
     </div>
     <div class="weeknav" id="weeknav">
       <button class="iconbtn" id="prevW" type="button" aria-label="Previous week">‹</button>
@@ -313,6 +341,37 @@ details.rates summary{cursor:pointer;color:var(--accent);font-weight:500;font-si
       <div class="colmap" id="colmap"></div>
     </div>
     <p class="prod"><b>How to paste:</b> in the tracker, open the 2026 sheet, click the first empty cell in column A, then paste (Cmd+V or Ctrl+V). Each row fills columns A to Y in the tracker's order. Année and Période are pasted as values. Réel, Réf facture, the Finance columns (Q to V) and Heure supp are left empty, to be filled in the tracker.</p>
+  </section>
+
+  <!-- Year template -->
+  <section id="v-year" class="view" role="tabpanel" aria-labelledby="t-year" hidden>
+    <div class="exportbar">
+      <div class="cnt" id="yrInfo"></div>
+      <label class="btn small" for="yrFile">Use another .ics</label>
+      <input id="yrFile" class="vh" type="file" accept=".ics,text/calendar">
+      <button class="btn small" id="yrSample" type="button">Try sample agenda</button>
+      <button class="btn primary" id="yrExport" type="button">Export to Excel</button>
+    </div>
+    <div class="panel">
+      <div class="head"><div><h2>Year template</h2><div class="sub">28 Sep 2026 to 31 Dec 2027, one column per day. Exported as YEAR_TEMPLATE_AGENDA.xlsx with the same layout.</div></div><button class="btn small" id="yrToday" type="button">Go to today</button></div>
+      <div class="ygrid" id="yrGrid"></div>
+    </div>
+    <div class="yt-two">
+      <div class="panel">
+        <div class="head"><div><h2>How events are placed</h2></div></div>
+        <ol class="rules">
+          <li><b>Row from the Outlook category.</b> <span>An event goes to the row named like one of its categories: J&amp;L OOO, SS PRECO, SS PRECO 2, FW PRECO, SS SHOW, FW SHOW, PAULA.</span></li>
+          <li><b>Otherwise, from the subject.</b> <span>"SS PRECO: Design review" goes to SS PRECO and shows "Design review". "SS PRECO | text" works too.</span></li>
+          <li><b>Days covered.</b> <span>Multi-day and all-day events fill every day they cover. Timed events go on their start day. Recurring series are expanded.</span></li>
+          <li><b>Same day, same row.</b> <span>Texts are stacked on separate lines in one cell.</span></li>
+          <li><b>Skipped.</b> <span>Cancelled events and anything outside 28 Sep 2026 to 31 Dec 2027.</span></li>
+        </ol>
+      </div>
+      <div class="panel">
+        <div class="head"><div><h2>Not placed <span class="sub" id="yrUnCt"></span></h2><div class="sub">Events with no matching category or subject prefix.</div></div></div>
+        <div id="yrUnmatched"></div>
+      </div>
+    </div>
   </section>
 
   <p class="prod"><b>In the real version</b>, the planner would read the Outlook calendar and add the new rows to the tracker on SharePoint directly, with no copy and paste. That needs IT to approve access to Microsoft 365 (Graph API or Power Automate).</p>
@@ -463,7 +522,8 @@ const byKey = k => S.rows.find(b => b.key===k);
 const isCopied = b => !!COPIED[b.key];
 function defaultSel(){ if (!S.selTouched) S.sel = new Set(S.rows.filter(b => !isCopied(b) && b.st!=='T').map(b => b.key)); }
 
-function load(rows, file, copiedSeed, empty){
+function load(rows, file, copiedSeed, empty, icsText){
+  S.icsText = icsText || null; Y.result = null; Y.scrolled = false;
   // after a reset or a real file, a reload opens empty (the file itself is never stored)
   S.empty = !!empty; if (empty || file) store.set('fp3-empty', true);
   S.rows = rows; S.file = file; S.msel = new Set(); S.mselInit = false; S.selTouched = false; S.month = 'all'; S.ag = 'all'; S.q = ''; S.cap = 200;
@@ -490,11 +550,11 @@ function load(rows, file, copiedSeed, empty){
 
 /* ---------- Render ---------- */
 function render(){
-  ['plan','rows'].forEach(t => { $('v-'+t).hidden = S.tab!==t; $('t-'+t).setAttribute('aria-selected', S.tab===t); });
+  ['plan','rows','year'].forEach(t => { $('v-'+t).hidden = S.tab!==t; $('t-'+t).setAttribute('aria-selected', S.tab===t); });
   $('weeknav').style.visibility = S.tab==='plan' ? 'visible' : 'hidden';
   const n = S.rows.filter(b => !isCopied(b) && b.st!=='T').length;
   $('todoCt').hidden = !n; $('todoCt').textContent = n;
-  if (S.tab==='plan') renderPlan(); else renderRows();
+  if (S.tab==='plan') renderPlan(); else if (S.tab==='rows') renderRows(); else renderYear();
 }
 
 function weekDays(){
@@ -580,7 +640,7 @@ function renderRows(){
   if (noRate.length){ $('rowsSub').textContent += ` Set the day rate for ${noRate.length} agenc${noRate.length===1?'y':'ies'} below to fill Estimé.`; document.querySelector('details.rates').open = true; }
   const sel = [...S.sel].map(byKey).filter(Boolean);
   $('selCnt').innerHTML = `${sel.length} row${sel.length===1?'':'s'} selected<small>${sel.length ? 'Copy them, then paste in column A of the first empty row of the tracker. They are then marked as copied.' : 'Tick rows in the table to export them.'}</small>`;
-  $('copySel').disabled = !sel.length; $('dlSel').hidden = inIframe; $('dlSel').disabled = !sel.length;
+  $('copySel').disabled = !sel.length; $('dlSel').hidden = !canSave(); $('dlSel').disabled = !sel.length;
   renderRates(); renderColmap();
 
   if (!rows.length){ $('rows').innerHTML = `<tr><td class="empty">${!S.rows.length ? 'No calendar loaded. Click Load .ics above to import the Outlook calendar.' : S.show==='todo' ? 'Every fitting has been copied to the tracker.' : 'No rows match these filters.'}</td></tr>`; $('rowsMore').textContent=''; return; }
@@ -635,6 +695,18 @@ function copy(text, msg, after){
   try { navigator.clipboard.writeText(text).then(() => { toast(msg); after && after(); }, fb); } catch(e){ fb(); }
 }
 $('copyClose').onclick = () => $('copyBox').hidden = true;
+let DL = null;
+(async () => { try { DL = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch(e){ DL = null; } if (DL) render(); })();
+const canSave = () => !!DL || !inIframe;
+async function saveFile(filename, blob){
+  if (DL){
+    try { await DL.save({filename, data: blob}); toast(`Saved ${filename}`); return true; }
+    catch(e){ if (e && e.code === 'declined') toast('Download cancelled'); else if (e && e.code === 'rate_limited') toast('A download is already waiting for your answer'); else toast('This view cannot save files. Open the page on its GitHub link instead.'); return false; }
+  }
+  if (inIframe){ toast('This view cannot save files. Open the page on its GitHub link instead.'); return false; }
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  toast(`Downloaded ${filename}`); return true;
+}
 const selected = () => [...S.sel].map(byKey).filter(Boolean).sort((a,b) => a.date - b.date || a.debut - b.debut);
 function markCopied(list){ const t = dkey(new Date()); list.forEach(b => { COPIED[b.key] = t; S.sel.delete(b.key); }); S.selTouched = true; persist(); render(); }
 $('copySel').onclick = () => { const s = selected(); if (!s.length) return; copy(tsv(s.map(trackerRow)), `${s.length} row${s.length===1?'':'s'} copied and marked. Paste in column A of the first empty row.`, () => markCopied(s)); };
@@ -644,8 +716,8 @@ $('dlSel').onclick = () => {
   const ws = XLSX.utils.aoa_to_sheet(aoa, {cellDates:true, dateNF:'dd/mm/yy'});
   ws['!cols'] = [20,16,12,10,10,8,12,10,7,10,7,7,8,8,8,12,10,8,10,10,8,10,24,8,8].map(w => ({wch:w}));
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, String(new Date().getFullYear()));
-  XLSX.writeFile(wb, `Tracker_nouvelles_lignes_${dkey(new Date())}.xlsx`);
-  toast(`Downloaded ${s.length} rows and marked them as copied`); markCopied(s);
+  const buf = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  saveFile(`Tracker_nouvelles_lignes_${dkey(new Date())}.xlsx`, new Blob([buf])).then(ok => { if (ok) markCopied(s); });
 };
 
 /* ---------- Events ---------- */
@@ -724,7 +796,7 @@ $('calFile').onchange = e => {
   rd.onload = () => {
     const evs = parseICS(String(rd.result));
     if (!evs.length){ toast('No timed events in that file. Export the calendar from Outlook as .ics and try again.'); return; }
-    load(evs, f.name); toast(`Loaded ${evs.length} events`);
+    load(evs, f.name, null, false, String(rd.result)); toast(`Loaded ${evs.length} events`);
   };
   rd.readAsText(f);
 };
@@ -740,6 +812,7 @@ $('resetAll').onclick = () => {
   try { Object.keys(localStorage).filter(k => k.startsWith('fp3-')).forEach(k => localStorage.removeItem(k)); } catch(e){}
   MSGF = [...DEFAULT_FIELDS];
   S.tab = 'plan'; S.show = 'todo'; S.sel = new Set(); S.selTouched = false;
+  Y.text = null; Y.name = null; Y.own = false; Y.result = null;
   $('copyBox').hidden = true;
   load([], null, null, true);
   window.scrollTo({top:0});
@@ -747,12 +820,315 @@ $('resetAll').onclick = () => {
 };
 /* Invented Outlook export, to try the .ics import without a file */
 const SAMPLE_ICS = "BEGIN:VCALENDAR\nPRODID:-//Microsoft Corporation//Outlook 16.0 MIMEDIR//EN\nVERSION:2.0\nMETHOD:PUBLISH\nX-WR-CALNAME:Calendar (SAMPLE \u2013 invented fittings)\nBEGIN:VTIMEZONE\nTZID:Romance Standard Time\nBEGIN:STANDARD\nDTSTART:16011028T030000\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10\nTZOFFSETFROM:+0200\nTZOFFSETTO:+0100\nEND:STANDARD\nBEGIN:DAYLIGHT\nDTSTART:16010325T020000\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3\nTZOFFSETFROM:+0100\nTZOFFSETTO:+0200\nEND:DAYLIGHT\nEND:VTIMEZONE\nBEGIN:VEVENT\nUID:sample-fitting-0000@example.invalid\nSUMMARY:A\u00efcha NAVARRO - Post fitting\nDTSTART;TZID=Romance Standard Time:20261012T140000\nDTEND;TZID=Romance Standard Time:20261012T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Orbit Faces\\nCat\u00e9gorie: KNITWEAR\\nCollection: PRECO\\nS\n aison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0001@example.invalid\nSUMMARY:Sacha VIDAL - Post fitting\nDTSTART;TZID=Romance Standard Time:20261012T100000\nDTEND;TZID=Romance Standard Time:20261012T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Nord Agency\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0002@example.invalid\nSUMMARY:Iris DUARTE - Casting\nDTSTART;TZID=Romance Standard Time:20261012T100000\nDTEND;TZID=Romance Standard Time:20261012T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: KNITWEAR\\nCollection: SHOW\\nSa\n ison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0003@example.invalid\nSUMMARY:Maya HOLM - Post fitting\nDTSTART;TZID=Romance Standard Time:20261012T140000\nDTEND;TZID=Romance Standard Time:20261012T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSais\n on: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0004@example.invalid\nSUMMARY:L\u00e9a MORAND - Post fitting\nDTSTART;TZID=Romance Standard Time:20261013T100000\nDTEND;TZID=Romance Standard Time:20261013T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSai\n son: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0005@example.invalid\nSUMMARY:Malik DIALLO - Post fitting\nDTSTART;TZID=Romance Standard Time:20261013T100000\nDTEND;TZID=Romance Standard Time:20261013T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: LEATHER\\nCollection: SHOW\n \\nSaison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0006@example.invalid\nSUMMARY:Maya HOLM - Post fitting woven\\, jersey & denim\nDTSTART;TZID=Romance Standard Time:20261014T100000\nDTEND;TZID=Romance Standard Time:20261014T120000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSai\n son: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0007@example.invalid\nSUMMARY:A\u00efcha NAVARRO - Post fitting\nDTSTART;TZID=Romance Standard Time:20261014T100000\nDTEND;TZID=Romance Standard Time:20261014T120000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Orbit Faces\\nCat\u00e9gorie: KNITWEAR\\nCollection: SHOW\\nSa\n ison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0008@example.invalid\nSUMMARY:Iris DUARTE - Post fitting\nDTSTART;TZID=Romance Standard Time:20261015T100000\nDTEND;TZID=Romance Standard Time:20261015T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0009@example.invalid\nSUMMARY:A\u00efcha NAVARRO - Pre fitting\nDTSTART;TZID=Romance Standard Time:20261016T100000\nDTEND;TZID=Romance Standard Time:20261016T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Orbit Faces\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSais\n on: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0010@example.invalid\nSUMMARY:Lucas LINDQVIST - Post fitting\nDTSTART;TZID=Romance Standard Time:20261019T100000\nDTEND;TZID=Romance Standard Time:20261019T130000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Kite Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSais\n on: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0011@example.invalid\nSUMMARY:Sacha VIDAL - Post fitting\nDTSTART;TZID=Romance Standard Time:20261019T100000\nDTEND;TZID=Romance Standard Time:20261019T130000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Nord Agency\\nCat\u00e9gorie: KNITWEAR\\nCollection: SHOW\\nSa\n ison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0012@example.invalid\nSUMMARY:Iris DUARTE - Pre fitting\nDTSTART;TZID=Romance Standard Time:20261019T093000\nDTEND;TZID=Romance Standard Time:20261019T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0013@example.invalid\nSUMMARY:Maya HOLM - Post fitting\nDTSTART;TZID=Romance Standard Time:20261019T140000\nDTEND;TZID=Romance Standard Time:20261019T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSai\n son: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0014@example.invalid\nSUMMARY:Noah OKAFOR - Lookbook fitting\nDTSTART;TZID=Romance Standard Time:20261020T093000\nDTEND;TZID=Romance Standard Time:20261020T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Nord Agency\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0015@example.invalid\nSUMMARY:Lucas LINDQVIST - Post fitting\nDTSTART;TZID=Romance Standard Time:20261021T100000\nDTEND;TZID=Romance Standard Time:20261021T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Kite Models\\nCat\u00e9gorie: LEATHER\\nCollection: SHOW\\nSai\n son: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0016@example.invalid\nSUMMARY:Annul\u00e9 - A\u00efcha NAVARRO - Post fitting woven\\, jersey & denim\nDTSTART;TZID=Romance Standard Time:20261021T100000\nDTEND;TZID=Romance Standard Time:20261021T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Orbit Faces\\nCat\u00e9gorie: KNITWEAR\\nCollection: SHOW\\nSa\n ison: FW27\nCLASS:PUBLIC\nSTATUS:CANCELLED\nX-MICROSOFT-CDO-BUSYSTATUS:FREE\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0017@example.invalid\nSUMMARY:Elena PETIT - Lookbook fitting\nDTSTART;TZID=Romance Standard Time:20261022T100000\nDTEND;TZID=Romance Standard Time:20261022T120000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: LEATHER\\nCollection: PREC\n O\\nSaison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0018@example.invalid\nSUMMARY:Theo BERGER - Post fitting woven\\, jersey & denim\nDTSTART;TZID=Romance Standard Time:20261022T100000\nDTEND;TZID=Romance Standard Time:20261022T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSai\n son: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0019@example.invalid\nSUMMARY:Maya HOLM - Post fitting\nDTSTART;TZID=Romance Standard Time:20261022T100000\nDTEND;TZID=Romance Standard Time:20261022T120000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSais\n on: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0020@example.invalid\nSUMMARY:Lucas LINDQVIST - Post fitting\nDTSTART;TZID=Romance Standard Time:20261022T140000\nDTEND;TZID=Romance Standard Time:20261022T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Kite Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSais\n on: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0021@example.invalid\nSUMMARY:Malik DIALLO - Pre fitting\nDTSTART;TZID=Romance Standard Time:20261023T100000\nDTEND;TZID=Romance Standard Time:20261023T130000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\n\n Saison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0022@example.invalid\nSUMMARY:Lucas LINDQVIST - Post fitting\nDTSTART;TZID=Romance Standard Time:20261023T100000\nDTEND;TZID=Romance Standard Time:20261023T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Kite Models\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0023@example.invalid\nSUMMARY:L\u00e9a MORAND - Post fitting woven\\, jersey & denim\nDTSTART;TZID=Romance Standard Time:20261023T100000\nDTEND;TZID=Romance Standard Time:20261023T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSais\n on: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0024@example.invalid\nSUMMARY:Lucas LINDQVIST - Post fitting\nDTSTART;TZID=Romance Standard Time:20261026T140000\nDTEND;TZID=Romance Standard Time:20261026T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Kite Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSais\n on: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0025@example.invalid\nSUMMARY:L\u00e9a MORAND - Lookbook fitting\nDTSTART;TZID=Romance Standard Time:20261026T100000\nDTEND;TZID=Romance Standard Time:20261026T120000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Cat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSaison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0026@example.invalid\nSUMMARY:Malik DIALLO - Post fitting\nDTSTART;TZID=Romance Standard Time:20261027T140000\nDTEND;TZID=Romance Standard Time:20261027T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\\n nSaison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0027@example.invalid\nSUMMARY:Elena PETIT - Post fitting\nDTSTART;TZID=Romance Standard Time:20261027T100000\nDTEND;TZID=Romance Standard Time:20261027T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\n\n Saison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0028@example.invalid\nSUMMARY:Iris DUARTE - Paula's post fitting knitwear\nDTSTART;TZID=Romance Standard Time:20261027T100000\nDTEND;TZID=Romance Standard Time:20261027T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: KNITWEAR\\nCollection: PAULA's\\\n nSaison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0029@example.invalid\nSUMMARY:Theo BERGER - Post fitting\nDTSTART;TZID=Romance Standard Time:20261027T100000\nDTEND;TZID=Romance Standard Time:20261027T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: LEATHER\\nCollection: PRECO\nCLASS:PUBLIC\nSTATUS:TENTATIVE\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0030@example.invalid\nSUMMARY:Theo BERGER - Paula's post fitting knitwear\nDTSTART;TZID=Romance Standard Time:20261028T100000\nDTEND;TZID=Romance Standard Time:20261028T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: KNITWEAR\\nCollection: PAULA's\n \\nSaison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0031@example.invalid\nSUMMARY:Elena PETIT - Post fitting\nDTSTART;TZID=Romance Standard Time:20261028T093000\nDTEND;TZID=Romance Standard Time:20261028T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: KNITWEAR\\nCollection: SHO\n W\\nSaison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0032@example.invalid\nSUMMARY:A\u00efcha NAVARRO - Post fitting\nDTSTART;TZID=Romance Standard Time:20261029T100000\nDTEND;TZID=Romance Standard Time:20261029T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Orbit Faces\\nCat\u00e9gorie: KNITWEAR\\nCollection: SHOW\\nSa\n ison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0033@example.invalid\nSUMMARY:Maya HOLM - Post fitting\nDTSTART;TZID=Romance Standard Time:20261029T100000\nDTEND;TZID=Romance Standard Time:20261029T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: LEATHER\\nCollection: PRECO\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0034@example.invalid\nSUMMARY:Malik DIALLO - Lookbook fitting\nDTSTART;TZID=Romance Standard Time:20261029T140000\nDTEND;TZID=Romance Standard Time:20261029T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: LEATHER\\nCollection: PREC\n O\\nSaison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0035@example.invalid\nSUMMARY:Elena PETIT - Casting\nDTSTART;TZID=Romance Standard Time:20261030T100000\nDTEND;TZID=Romance Standard Time:20261030T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\n\n Saison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0036@example.invalid\nSUMMARY:Elena PETIT - Lookbook fitting\nDTSTART;TZID=Romance Standard Time:20261102T100000\nDTEND;TZID=Romance Standard Time:20261102T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\\n nSaison: SS27\nCLASS:PUBLIC\nSTATUS:TENTATIVE\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0037@example.invalid\nSUMMARY:A\u00efcha NAVARRO - Post fitting\nDTSTART;TZID=Romance Standard Time:20261102T100000\nDTEND;TZID=Romance Standard Time:20261102T120000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Orbit Faces\\nCat\u00e9gorie: KNITWEAR\\nCollection: SHOW\\nSa\n ison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0038@example.invalid\nSUMMARY:L\u00e9a MORAND - Post fitting\nDTSTART;TZID=Romance Standard Time:20261103T100000\nDTEND;TZID=Romance Standard Time:20261103T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSais\n on: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0039@example.invalid\nSUMMARY:Iris DUARTE - Post fitting\nDTSTART;TZID=Romance Standard Time:20261103T100000\nDTEND;TZID=Romance Standard Time:20261103T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0040@example.invalid\nSUMMARY:Theo BERGER - Post fitting\nDTSTART;TZID=Romance Standard Time:20261103T100000\nDTEND;TZID=Romance Standard Time:20261103T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSais\n on: FW27\nCLASS:PUBLIC\nSTATUS:TENTATIVE\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0041@example.invalid\nSUMMARY:Maya HOLM - Paula's post fitting knitwear\nDTSTART;TZID=Romance Standard Time:20261104T100000\nDTEND;TZID=Romance Standard Time:20261104T120000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: KNITWEAR\\nCollection: PAULA's\n \\nSaison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0042@example.invalid\nSUMMARY:Malik DIALLO - Post fitting woven\\, jersey & denim\nDTSTART;TZID=Romance Standard Time:20261104T140000\nDTEND;TZID=Romance Standard Time:20261104T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: LEATHER\\nCollection: SHOW\n \\nSaison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0043@example.invalid\nSUMMARY:Elena PETIT - Casting\nDTSTART;TZID=Romance Standard Time:20261104T100000\nDTEND;TZID=Romance Standard Time:20261104T130000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: LEATHER\\nCollection: PREC\n O\\nSaison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0044@example.invalid\nSUMMARY:Yuna KIM - Pre fitting\nDTSTART;TZID=Romance Standard Time:20261104T100000\nDTEND;TZID=Romance Standard Time:20261104T190000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0045@example.invalid\nSUMMARY:Yuna KIM - Paula's post fitting knitwear\nDTSTART;TZID=Romance Standard Time:20261105T093000\nDTEND;TZID=Romance Standard Time:20261105T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: KNITWEAR\\nCollection: PAULA's\\\n nSaison: FW27\nCLASS:PUBLIC\nSTATUS:TENTATIVE\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0046@example.invalid\nSUMMARY:Theo BERGER - Pre fitting\nDTSTART;TZID=Romance Standard Time:20261106T140000\nDTEND;TZID=Romance Standard Time:20261106T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: LEATHER\\nCollection: SHOW\\nSa\n ison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0047@example.invalid\nSUMMARY:Sacha VIDAL - Casting\nDTSTART;TZID=Romance Standard Time:20261109T100000\nDTEND;TZID=Romance Standard Time:20261109T190000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Nord Agency\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSais\n on: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0048@example.invalid\nSUMMARY:Yuna KIM - Post fitting\nDTSTART;TZID=Romance Standard Time:20261109T100000\nDTEND;TZID=Romance Standard Time:20261109T190000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0049@example.invalid\nSUMMARY:L\u00e9a MORAND - Post fitting\nDTSTART;TZID=Romance Standard Time:20261109T100000\nDTEND;TZID=Romance Standard Time:20261109T130000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSai\n son: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0050@example.invalid\nSUMMARY:Yuna KIM - Pre fitting\nDTSTART;TZID=Romance Standard Time:20261110T100000\nDTEND;TZID=Romance Standard Time:20261110T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCollection: PRECO\\nSaison: SS27\nCLASS:PUBLIC\nSTATUS:TENTATIVE\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0051@example.invalid\nSUMMARY:Lucas LINDQVIST - Post fitting\nDTSTART;TZID=Romance Standard Time:20261110T093000\nDTEND;TZID=Romance Standard Time:20261110T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Kite Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSais\n on: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0052@example.invalid\nSUMMARY:In\u00e8s ROSSI - Post fitting\nDTSTART;TZID=Romance Standard Time:20261110T093000\nDTEND;TZID=Romance Standard Time:20261110T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSai\n son: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0053@example.invalid\nSUMMARY:A\u00efcha NAVARRO - Post fitting\nDTSTART;TZID=Romance Standard Time:20261110T100000\nDTEND;TZID=Romance Standard Time:20261110T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Orbit Faces\\nCollection: SHOW\\nSaison: FW27\nCLASS:PUBLIC\nSTATUS:TENTATIVE\nX-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0054@example.invalid\nSUMMARY:Malik DIALLO - Lookbook fitting\nDTSTART;TZID=Romance Standard Time:20261111T140000\nDTEND;TZID=Romance Standard Time:20261111T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\n\n Saison: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0055@example.invalid\nSUMMARY:Noah OKAFOR - Post fitting\nDTSTART;TZID=Romance Standard Time:20261111T100000\nDTEND;TZID=Romance Standard Time:20261111T180000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Nord Agency\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0056@example.invalid\nSUMMARY:L\u00e9a MORAND - Post fitting\nDTSTART;TZID=Romance Standard Time:20261111T100000\nDTEND;TZID=Romance Standard Time:20261111T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Atlas Models\\nCat\u00e9gorie: LEATHER\\nCollection: PRECO\\nS\n aison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0057@example.invalid\nSUMMARY:Iris DUARTE - Casting\nDTSTART;TZID=Romance Standard Time:20261111T100000\nDTEND;TZID=Romance Standard Time:20261111T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\nSais\n on: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0058@example.invalid\nSUMMARY:Malik DIALLO - Post fitting woven\\, jersey & denim\nDTSTART;TZID=Romance Standard Time:20261112T100000\nDTEND;TZID=Romance Standard Time:20261112T190000\nLOCATION:SCRIBE\nCATEGORIES:MRTW\nDESCRIPTION:Agence: Lumen Management\\nCat\u00e9gorie: WOVEN\\nCollection: PRECO\\\n nSaison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0059@example.invalid\nSUMMARY:A\u00efcha NAVARRO - Casting\nDTSTART;TZID=Romance Standard Time:20261113T100000\nDTEND;TZID=Romance Standard Time:20261113T190000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Orbit Faces\\nCat\u00e9gorie: WOVEN\\nCollection: SHOW\\nSaiso\n n: FW27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-fitting-0060@example.invalid\nSUMMARY:Yuna KIM - Post fitting\nDTSTART;TZID=Romance Standard Time:20261113T100000\nDTEND;TZID=Romance Standard Time:20261113T180000\nLOCATION:SCRIBE\nCATEGORIES:WRTW\nDESCRIPTION:Agence: Rive Talent\\nCat\u00e9gorie: LEATHER\\nCollection: PRECO\\nSa\n ison: SS27\nCLASS:PUBLIC\nSTATUS:CONFIRMED\nX-MICROSOFT-CDO-BUSYSTATUS:BUSY\nDTSTAMP:20261020T120000Z\nEND:VEVENT\nEND:VCALENDAR\n";
-$('trySample').onclick = () => { load(parseICS(SAMPLE_ICS), 'Sample_Outlook_calendar_fittings.ics'); toast('Loaded the sample .ics, as if you had picked it with Load .ics'); };
+$('trySample').onclick = () => { load(parseICS(SAMPLE_ICS), 'Sample_Outlook_calendar_fittings.ics', null, false, SAMPLE_ICS); toast('Loaded the sample .ics, as if you had picked it with Load .ics'); };
 $('dlSample').hidden = inIframe;
 $('dlSample').onclick = () => {
   const url = URL.createObjectURL(new Blob([SAMPLE_ICS], {type:'application/octet-stream'}));
   const a = document.createElement('a'); a.href = url; a.download = 'Sample_Outlook_calendar_fittings.ics'; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
+};
+
+/* Invented year agenda, to try the Year template without a file */
+const SAMPLE_YEAR_ICS = "BEGIN:VCALENDAR\nPRODID:-//Microsoft Corporation//Outlook 16.0 MIMEDIR//EN\nVERSION:2.0\nMETHOD:PUBLISH\nX-WR-CALNAME:Agenda (SAMPLE \u2013 invented)\nBEGIN:VTIMEZONE\nTZID:Romance Standard Time\nBEGIN:STANDARD\nDTSTART:16011028T030000\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10\nTZOFFSETFROM:+0200\nTZOFFSETTO:+0100\nEND:STANDARD\nBEGIN:DAYLIGHT\nDTSTART:16010325T020000\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3\nTZOFFSETFROM:+0100\nTZOFFSETTO:+0200\nEND:DAYLIGHT\nEND:VTIMEZONE\nBEGIN:VEVENT\nUID:sample-agenda-001@example.invalid\nSUMMARY:Toussaint\nDTSTART;VALUE=DATE:20261102\nDTEND;VALUE=DATE:20261105\nCATEGORIES:J&L OOO\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-002@example.invalid\nSUMMARY:Christmas break\nDTSTART;VALUE=DATE:20261221\nDTEND;VALUE=DATE:20270102\nCATEGORIES:J&L OOO\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-003@example.invalid\nSUMMARY:J&L OOO: Easter\nDTSTART;VALUE=DATE:20270329\nDTEND;VALUE=DATE:20270403\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-004@example.invalid\nSUMMARY:J&L OOO: Summer\nDTSTART;VALUE=DATE:20270802\nDTEND;VALUE=DATE:20270821\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-005@example.invalid\nSUMMARY:SS PRECO: Kick-off\nDTSTART;TZID=Romance Standard Time:20261005T100000\nDTEND;TZID=Romance Standard Time:20261005T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-006@example.invalid\nSUMMARY:SS PRECO: Design review\nDTSTART;TZID=Romance Standard Time:20261019T140000\nDTEND;TZID=Romance Standard Time:20261019T170000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-007@example.invalid\nSUMMARY:SS PRECO | C&Pr Review\nDTSTART;TZID=Romance Standard Time:20261109T100000\nDTEND;TZID=Romance Standard Time:20261109T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-008@example.invalid\nSUMMARY:SS PRECO: Fitting 1\nDTSTART;VALUE=DATE:20261123\nDTEND;VALUE=DATE:20261126\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-009@example.invalid\nSUMMARY:SS PRECO: Fitting 2\nDTSTART;VALUE=DATE:20261207\nDTEND;VALUE=DATE:20261209\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-010@example.invalid\nSUMMARY:SS PRECO: Line freeze\nDTSTART;VALUE=DATE:20270115\nDTEND;VALUE=DATE:20270116\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-011@example.invalid\nSUMMARY:SS PRECO 2: Merch review\nDTSTART;TZID=Romance Standard Time:20261123T100000\nDTEND;TZID=Romance Standard Time:20261123T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-012@example.invalid\nSUMMARY:SS PRECO 2: Pricing\nDTSTART;VALUE=DATE:20270111\nDTEND;VALUE=DATE:20270112\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-013@example.invalid\nSUMMARY:Costing check\nDTSTART;TZID=Romance Standard Time:20270104T100000\nDTEND;TZID=Romance Standard Time:20270104T120000\nCATEGORIES:FW PRECO\nRRULE:FREQ=MONTHLY;BYDAY=1MO;UNTIL=20270630T235959Z\nEXDATE;TZID=Romance Standard Time:20270405T100000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-014@example.invalid\nSUMMARY:FW PRECO: Kick-off\nDTSTART;VALUE=DATE:20270301\nDTEND;VALUE=DATE:20270302\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-015@example.invalid\nSUMMARY:FW PRECO: Fitting 1\nDTSTART;VALUE=DATE:20270419\nDTEND;VALUE=DATE:20270422\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-016@example.invalid\nSUMMARY:FW PRECO: Fitting 2\nDTSTART;VALUE=DATE:20270517\nDTEND;VALUE=DATE:20270519\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-017@example.invalid\nSUMMARY:Design meeting\nDTSTART;TZID=Romance Standard Time:20261001T100000\nDTEND;TZID=Romance Standard Time:20261001T120000\nCATEGORIES:SS SHOW\nRRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=TH;COUNT=10\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-017@example.invalid\nRECURRENCE-ID;TZID=Romance Standard Time:20261029T100000\nSUMMARY:Design meeting (moved)\nDTSTART;TZID=Romance Standard Time:20261030T100000\nDTEND;TZID=Romance Standard Time:20261030T120000\nCATEGORIES:SS SHOW\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-018@example.invalid\nSUMMARY:SS SHOW: Show\nDTSTART;VALUE=DATE:20270122\nDTEND;VALUE=DATE:20270125\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-019@example.invalid\nSUMMARY:SS SHOW: Showroom\nDTSTART;VALUE=DATE:20270125\nDTEND;VALUE=DATE:20270206\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-020@example.invalid\nSUMMARY:FW SHOW: Kick-off\nDTSTART;TZID=Romance Standard Time:20270405T100000\nDTEND;TZID=Romance Standard Time:20270405T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-021@example.invalid\nSUMMARY:FW SHOW: Show\nDTSTART;VALUE=DATE:20270625\nDTEND;VALUE=DATE:20270628\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-022@example.invalid\nSUMMARY:FW SHOW: Showroom\nDTSTART;VALUE=DATE:20270628\nDTEND;VALUE=DATE:20270710\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-023@example.invalid\nSUMMARY:PAULA: Merch fitting\nDTSTART;VALUE=DATE:20270215\nDTEND;VALUE=DATE:20270217\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-024@example.invalid\nSUMMARY:Line review\nDTSTART;TZID=Romance Standard Time:20270503T100000\nDTEND;TZID=Romance Standard Time:20270503T120000\nCATEGORIES:PAULA\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20270602T000000Z\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-025@example.invalid\nSUMMARY:Team lunch\nDTSTART;TZID=Romance Standard Time:20261016T100000\nDTEND;TZID=Romance Standard Time:20261016T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-026@example.invalid\nSUMMARY:Budget meeting\nDTSTART;TZID=Romance Standard Time:20261203T100000\nDTEND;TZID=Romance Standard Time:20261203T120000\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:sample-agenda-027@example.invalid\nSUMMARY:SS PRECO: Old review\nDTSTART;TZID=Romance Standard Time:20261012T100000\nDTEND;TZID=Romance Standard Time:20261012T120000\nSTATUS:CANCELLED\nDTSTAMP:20261027T090000Z\nEND:VEVENT\nEND:VCALENDAR\n";
+/* ---------- Year template (agenda grid from the .ics, exported to Excel) ---------- */
+const YT_START = new Date(2026, 8, 28), YT_END = new Date(2027, 11, 31);
+// key -> label in column A (null = spacer row, "" = unlabelled row)
+const YT_BODY = [
+  ['J&L OOO','J&L OOO'], [null,null],
+  ['SS PRECO','SS PRECO'], ['SS PRECO 2',''], [null,null],
+  ['FW PRECO','FW PRECO'], [null,null],
+  ['SS SHOW','SS SHOW'], [null,null],
+  ['FW SHOW','FW SHOW'], [null,null],
+  ['PAULA','PAULA']
+];
+const YT_KEYS = Object.fromEntries(YT_BODY.filter(r => r[0]).map(r => [r[0].toUpperCase(), r[0]]));
+const YT_EXCELJS = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+const YT_MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+const Y = {text:null, name:null, own:false, result:null};
+
+/* Read every VEVENT with its raw properties (dates, categories, recurrence) */
+function ytParse(text){
+  const lines = text.replace(/\r\n?/g,'\n').replace(/\n[ \t]/g,'').split('\n');
+  const evs = []; let cur = null, depth = 0;
+  const unesc = v => v.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
+  for (const ln of lines){
+    if (ln === 'BEGIN:VEVENT'){ cur = {cats:[], exdates:[]}; depth = 0; continue; }
+    if (!cur) continue;
+    if (/^BEGIN:/.test(ln)){ depth++; continue; }          // skip VALARM etc.
+    if (/^END:/.test(ln)){ if (ln === 'END:VEVENT' && depth === 0){ evs.push(cur); cur = null; } else depth--; continue; }
+    if (depth) continue;
+    const i = ln.indexOf(':'); if (i < 0) continue;
+    const [key, ...ps] = ln.slice(0,i).split(';'); const p = ps.join(';'); const v = ln.slice(i+1);
+    const K = key.toUpperCase();
+    if (K==='SUMMARY') cur.summary = unesc(v).trim();
+    else if (K==='UID') cur.uid = v.trim();
+    else if (K==='STATUS') cur.status = v.trim().toUpperCase();
+    else if (K==='CATEGORIES') cur.cats.push(...v.split(/(?<!\\),/).map(x => unesc(x).trim()).filter(Boolean));
+    else if (K==='DTSTART') cur.start = ytDT(p, v);
+    else if (K==='DTEND') cur.end = ytDT(p, v);
+    else if (K==='DURATION') cur.duration = v.trim();
+    else if (K==='RRULE') cur.rrule = v.trim();
+    else if (K==='EXDATE') v.split(',').forEach(x => { const d = ytDT(p, x.trim()); if (d) cur.exdates.push(ytKey(d)); });
+    else if (K==='RECURRENCE-ID') cur.recurId = ytDT(p, v);
+  }
+  return evs.filter(e => e.start);
+}
+// -> {d: Date in local time, allDay}
+function ytDT(params, v){
+  v = String(v||'').trim();
+  let m = v.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (m || /VALUE=DATE(?!-)/i.test(params||'')){ m = m || v.match(/^(\d{4})(\d{2})(\d{2})/); if (!m) return null; return {d:new Date(+m[1], m[2]-1, +m[3]), allDay:true}; }
+  m = v.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/); if (!m) return null;
+  const d = m[7] ? new Date(Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5],+m[6])) : new Date(+m[1],m[2]-1,+m[3],+m[4],+m[5],+m[6]);
+  return {d, allDay:false};
+}
+const ytKey = x => { const d = x.d; return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}` + (x.allDay ? '' : `T${pad(d.getHours())}${pad(d.getMinutes())}`); };
+const ytDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const ytAddDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, d.getHours(), d.getMinutes(), d.getSeconds());
+function ytDuration(s){ // ISO 8601 duration -> ms (P1D, PT2H30M, P1W)
+  const m = String(s||'').match(/^([+-])?P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/); if (!m) return 0;
+  return ((+m[2]||0)*7*864e5 + (+m[3]||0)*864e5 + (+m[4]||0)*36e5 + (+m[5]||0)*6e4 + (+m[6]||0)*1e3) * (m[1]==='-' ? -1 : 1);
+}
+
+/* Expand an RRULE into occurrence starts (Outlook patterns: daily, weekly, monthly, yearly) */
+function ytExpand(ev, limit){
+  const R = Object.fromEntries(ev.rrule.split(';').map(x => x.split('=')).map(([k,v]) => [k.toUpperCase(), v]));
+  const freq = R.FREQ, interval = Math.max(1, +R.INTERVAL || 1), count = R.COUNT ? +R.COUNT : Infinity;
+  const until = R.UNTIL ? ytDT('', R.UNTIL) : null;
+  const untilD = until ? (until.allDay ? new Date(until.d.getFullYear(), until.d.getMonth(), until.d.getDate(), 23, 59, 59) : until.d) : null;
+  const DOW = {SU:0, MO:1, TU:2, WE:3, TH:4, FR:5, SA:6};
+  const byday = R.BYDAY ? R.BYDAY.split(',').map(x => { const m = x.match(/^([+-]?\d+)?(MO|TU|WE|TH|FR|SA|SU)$/); return m ? {n: m[1] ? +m[1] : 0, wd: DOW[m[2]]} : null; }).filter(Boolean) : null;
+  const bymd = R.BYMONTHDAY ? R.BYMONTHDAY.split(',').map(Number) : null;
+  const bymonth = R.BYMONTH ? R.BYMONTH.split(',').map(x => +x - 1) : null;
+  const setpos = R.BYSETPOS ? R.BYSETPOS.split(',').map(Number) : null;
+  const s0 = ev.start.d, H = s0.getHours(), Mi = s0.getMinutes(), Sc = s0.getSeconds();
+  const at = (y, m, d) => new Date(y, m, d, H, Mi, Sc);
+  const dim = (y, m) => new Date(y, m+1, 0).getDate();
+  function monthDays(y, m){ // candidates inside one month
+    let out = [];
+    if (bymd) out = bymd.map(d => d > 0 ? d : dim(y,m) + d + 1).filter(d => d >= 1 && d <= dim(y,m)).map(d => at(y,m,d));
+    else if (byday){
+      for (const b of byday){
+        const all = []; for (let d = 1; d <= dim(y,m); d++) if (new Date(y,m,d).getDay() === b.wd) all.push(d);
+        if (b.n > 0 && all[b.n-1]) out.push(at(y,m,all[b.n-1]));
+        else if (b.n < 0 && all[all.length + b.n]) out.push(at(y,m,all[all.length + b.n]));
+        else if (b.n === 0) all.forEach(d => out.push(at(y,m,d)));
+      }
+    } else if (s0.getDate() <= dim(y,m)) out = [at(y,m,s0.getDate())];
+    out.sort((a,b) => a - b);
+    if (setpos) out = setpos.map(p => p > 0 ? out[p-1] : out[out.length + p]).filter(Boolean);
+    return out;
+  }
+  const res = []; let n = 0, guard = 0;
+  const push = list => {
+    for (const d of list.sort((a,b) => a - b)){
+      if (d < s0) continue;
+      if (untilD && d > untilD) return false;
+      if (n >= count || d > limit) return false;
+      n++; res.push(d);
+    }
+    return true;
+  };
+  if (freq === 'DAILY'){
+    for (let d = new Date(s0); guard++ < 20000; d = ytAddDays(d, interval)){
+      if (bymonth && !bymonth.includes(d.getMonth())) continue;
+      if (byday && !byday.some(b => b.wd === d.getDay())) continue;
+      if (!push([new Date(d)])) break;
+    }
+  } else if (freq === 'WEEKLY'){
+    const wk0 = ytAddDays(ytDay(s0), -((s0.getDay()+6)%7));   // Monday of the first week
+    const days = byday ? byday.map(b => (b.wd+6)%7) : [(s0.getDay()+6)%7];
+    for (let w = 0; guard++ < 5000; w += interval){
+      const list = days.map(o => { const d = ytAddDays(wk0, w*7 + o); return at(d.getFullYear(), d.getMonth(), d.getDate()); });
+      if (!push(list)) break;
+    }
+  } else if (freq === 'MONTHLY'){
+    for (let k = 0; guard++ < 2000; k += interval){
+      const y = s0.getFullYear() + Math.floor((s0.getMonth()+k)/12), m = (s0.getMonth()+k) % 12;
+      if (bymonth && !bymonth.includes(m)) continue;
+      if (!push(monthDays(y, m))) break;
+    }
+  } else if (freq === 'YEARLY'){
+    for (let k = 0; guard++ < 200; k += interval){
+      const y = s0.getFullYear() + k; let list = [];
+      (bymonth || [s0.getMonth()]).forEach(m => { list = list.concat(monthDays(y, m)); });
+      if (!push(list)) break;
+    }
+  } else res.push(new Date(s0));
+  return res;
+}
+
+function ytResolve(ev){
+  const subject = ev.summary || '';
+  for (const c of ev.cats) if (YT_KEYS[c.toUpperCase()]) return [YT_KEYS[c.toUpperCase()], subject];
+  for (const sep of [':', '|']){
+    const i = subject.indexOf(sep);
+    if (i >= 0){ const p = subject.slice(0,i).trim().toUpperCase(); if (YT_KEYS[p]) return [YT_KEYS[p], subject.slice(i+1).trim()]; }
+  }
+  return [null, subject];
+}
+
+/* Build the grid: cells[rowKey][dayKey] = [texts] */
+function ytBuild(text){
+  const raw = ytParse(text);
+  const masters = raw.filter(e => !e.recurId);
+  const overrides = {}; raw.filter(e => e.recurId).forEach(e => { (overrides[e.uid] ||= {})[ytKey(e.recurId)] = e; });
+  const limit = new Date(YT_END.getFullYear(), YT_END.getMonth(), YT_END.getDate() + 1);
+  const occ = [];
+  for (const ev of masters){
+    const durMs = ev.end ? ev.end.d - ev.start.d : (ev.duration ? ytDuration(ev.duration) : (ev.start.allDay ? 864e5 : 0));
+    if (ev.rrule){
+      const ex = new Set(ev.exdates), ov = overrides[ev.uid] || {};
+      for (const d of ytExpand(ev, limit)){
+        const k = ytKey({d, allDay: ev.start.allDay});
+        if (ex.has(k)) continue;
+        if (ov[k]){ const o = ov[k]; delete ov[k]; occ.push({ev:o, s:o.start, e:o.end || {d:new Date(o.start.d.getTime() + durMs), allDay:o.start.allDay}}); continue; }
+        occ.push({ev, s:{d, allDay:ev.start.allDay}, e:{d:new Date(d.getTime() + durMs), allDay:ev.start.allDay}});
+      }
+      Object.values(ov).forEach(o => occ.push({ev:o, s:o.start, e:o.end || o.start}));   // moved outside the series
+    } else occ.push({ev, s:ev.start, e:ev.end || (ev.duration ? {d:new Date(ev.start.d.getTime() + durMs), allDay:ev.start.allDay} : ev.start)});
+  }
+  // overrides whose series master is missing
+  raw.filter(e => e.recurId && !masters.some(m => m.uid === e.uid)).forEach(o => occ.push({ev:o, s:o.start, e:o.end || o.start}));
+
+  const cells = {}, unmatched = new Set(); let placed = 0, cancelled = 0;
+  for (const {ev, s, e} of occ){
+    if (ev.status === 'CANCELLED'){ cancelled++; continue; }
+    const [key, txt] = ytResolve(ev);
+    const sd = ytDay(s.d);
+    let last = ytDay(e.d);
+    if (s.allDay) last = ytAddDays(last, -1);                                   // all-day DTEND is exclusive
+    else if (e.d > s.d && e.d.getHours() === 0 && e.d.getMinutes() === 0) last = ytAddDays(last, -1);   // ends at midnight
+    if (last < sd) last = sd;
+    if (last < YT_START || sd > YT_END) continue;                               // out of range
+    if (!key){ unmatched.add(txt); continue; }
+    placed++;
+    for (let d = sd; d <= last; d = ytAddDays(d, 1)){
+      if (d < YT_START || d > YT_END) continue;
+      ((cells[key] ||= {})[dkey(d)] ||= []).push(txt);
+    }
+  }
+  return {cells, unmatched:[...unmatched].sort((a,b) => a.localeCompare(b)), placed, cancelled, total: raw.length};
+}
+
+function ytDays(){ const out = []; for (let d = new Date(YT_START); d <= YT_END; d = ytAddDays(d, 1)) out.push(d); return out; }
+function ytIsoWeek(d){ const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(t.getUTCFullYear(),0,1)); return [t.getUTCFullYear(), Math.ceil(((t - y0)/864e5 + 1)/7)]; }
+function ytSpans(days, keyfn){
+  const out = []; let cur = null, c1 = 0;
+  days.forEach((d, i) => { const k = keyfn(d); const ks = JSON.stringify(k); if (ks !== cur){ if (cur !== null) out.push([JSON.parse(cur), c1, i - 1]); cur = ks; c1 = i; } });
+  out.push([JSON.parse(cur), c1, days.length - 1]);
+  return out;
+}
+
+/* Which calendar the tab uses */
+function ytSource(){
+  if (Y.own) return {text:Y.text, name:Y.name};
+  if (S.icsText) return {text:S.icsText, name:S.file};
+  if (S.empty) return null;
+  return {text:SAMPLE_YEAR_ICS, name:'Sample agenda (invented)'};
+}
+
+function renderYear(){
+  const src = ytSource();
+  $('yrExport').disabled = !src;
+  if (!src){
+    $('yrInfo').innerHTML = 'No calendar loaded<small>Load an .ics here or at the top, or try the sample agenda.</small>';
+    $('yrGrid').innerHTML = '<div class="empty" style="padding:28px 4px;text-align:center"><b style="display:block;color:var(--ink);font-size:15px;margin-bottom:4px">No calendar loaded</b>Click <b>Use another .ics</b> or <b>Try sample agenda</b>.</div>';
+    $('yrUnmatched').innerHTML = ''; $('yrUnCt').textContent = ''; return;
+  }
+  if (!Y.result || Y.result.src !== src.text) Y.result = {...ytBuild(src.text), src: src.text};
+  const r = Y.result;
+  $('yrInfo').innerHTML = `${esc(src.name)}<small>${r.placed} event${r.placed===1?'':'s'} placed${r.unmatched.length ? `, ${r.unmatched.length} not placed (see below)` : ''}${r.cancelled ? `, ${r.cancelled} cancelled skipped` : ''}.</small>`;
+  const days = ytDays(), t0 = dkey(today0());
+  const tcls = d => (d.getDay()===0 || d.getDay()===6 ? 'we ' : '') + (dkey(d)===t0 ? 'today' : '');
+  let h = `<table class="yt" style="width:${96 + days.length*30}px"><colgroup>` + '<col class="lab">' + days.map(() => '<col>').join('') + '</colgroup><tbody>';
+  // YEAR
+  h += '<tr class="hd"><th class="lab">YEAR</th>' + ytSpans(days, d => d.getFullYear()).map(([y,c1,c2]) => `<td colspan="${c2-c1+1}" class="yr"><span>${y}</span></td>`).join('') + '</tr>';
+  h += `<tr class="gap"><th class="lab"></th><td colspan="${days.length}"></td></tr>`;
+  h += '<tr class="hd"><th class="lab">WEEK</th>' + ytSpans(days, d => ytIsoWeek(d)).map(([[,w],c1,c2]) => `<td colspan="${c2-c1+1}" class="wk">${w}</td>`).join('') + '</tr>';
+  h += `<tr class="gap"><th class="lab"></th><td colspan="${days.length}"></td></tr>`;
+  h += '<tr class="hd"><th class="lab">MONTH</th>' + ytSpans(days, d => [d.getFullYear(), d.getMonth()]).map(([[y,m],c1,c2]) => `<td colspan="${c2-c1+1}" class="mo"><span>${YT_MONTHS[m]}${(y===YT_END.getFullYear() && m===11) ? ' ' + y : ''}</span></td>`).join('') + '</tr>';
+  h += '<tr class="hd" id="ytDayRow"><th class="lab">DAY</th>' + days.map(d => `<td class="dn ${tcls(d)}">${d.getDate()}</td>`).join('') + '</tr>';
+  h += '<tr class="hd"><th class="lab"></th>' + days.map(d => `<td class="dn ${tcls(d)}">${'MTWTFSS'[(d.getDay()+6)%7]}</td>`).join('') + '</tr>';
+  h += `<tr class="gap"><th class="lab"></th><td colspan="${days.length}"></td></tr>`;
+  for (const [key, label] of YT_BODY){
+    if (key === null){ h += `<tr class="gap"><th class="lab"></th><td colspan="${days.length}"></td></tr>`; continue; }
+    const row = r.cells[key] || {};
+    h += `<tr class="bd"><th class="lab" title="${esc(key)}">${esc(label)}</th>` + days.map(d => { const tx = row[dkey(d)]; return tx ? `<td class="yev" title="${esc(dayLbl(d) + ': ' + tx.join(' / '))}">${esc(tx.join('\n'))}</td>` : `<td class="${tcls(d)}"></td>`; }).join('') + '</tr>';
+  }
+  $('yrGrid').innerHTML = h + '</tbody></table>';
+  $('yrUnCt').textContent = r.unmatched.length ? `(${r.unmatched.length})` : '';
+  $('yrUnmatched').innerHTML = r.unmatched.length
+    ? '<ul class="unl">' + r.unmatched.map(t => `<li>${esc(t)}</li>`).join('') + '</ul><p class="sub">Give them an Outlook category named like a row (for example SS PRECO), or start the subject with the row name and a colon: <code>SS PRECO: Design review</code>.</p>'
+    : '<p class="sub">Every event in the calendar found its row.</p>';
+  if (!Y.scrolled){ Y.scrolled = true; requestAnimationFrame(() => ytScrollTo(today0())); }
+}
+function ytScrollTo(d){
+  const i = Math.round((ytDay(d) - YT_START) / 864e5); const box = $('yrGrid');
+  const cell = box.querySelectorAll('#ytDayRow td')[Math.max(0, Math.min(i, 460))];
+  if (cell) box.scrollLeft = Math.max(0, cell.offsetLeft - box.querySelector('th.lab').offsetWidth - 40);
+}
+
+/* Excel export: same layout as the template spec */
+function ytLoadScript(src){ return new Promise((ok, ko) => { if (window.ExcelJS) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('load')); document.head.appendChild(s); }); }
+async function ytExport(){
+  const src = ytSource(); if (!src) return;
+  const btn = $('yrExport'); btn.disabled = true; btn.textContent = 'Preparing…';
+  try {
+    await ytLoadScript(YT_EXCELJS);
+    const r = Y.result && Y.result.src === src.text ? Y.result : ytBuild(src.text);
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Sheet1', {views:[{state:'frozen', xSplit:1, ySplit:8, topLeftCell:'B9'}]});
+    const R_YEAR = 2, R_WEEK = 4, R_MONTH = 6, R_DAY = 7, R_WD = 8, R_BODY = 10;
+    [[R_YEAR,'YEAR'],[R_WEEK,'WEEK'],[R_MONTH,'MONTH'],[R_DAY,'DAY']].forEach(([row, lab]) => { const c = ws.getCell(row, 1); c.value = lab; c.font = {bold:true}; });
+    const days = ytDays(); const col = i => i + 2;
+    const center = {horizontal:'center', vertical:'middle', wrapText:true};
+    const spanMerge = (row, c1, c2, value) => { const c = ws.getCell(row, c1); c.value = value; c.alignment = center; c.font = {bold:true}; if (c2 > c1) ws.mergeCells(row, c1, row, c2); };
+    ytSpans(days, d => d.getFullYear()).forEach(([y,c1]) => { const c = ws.getCell(R_YEAR, col(c1)); c.value = y; c.font = {bold:true}; });
+    ytSpans(days, d => ytIsoWeek(d)).forEach(([[,w],c1,c2]) => spanMerge(R_WEEK, col(c1), col(c2), w));
+    ytSpans(days, d => [d.getFullYear(), d.getMonth()]).forEach(([[y,m],c1,c2]) => spanMerge(R_MONTH, col(c1), col(c2), YT_MONTHS[m] + ((y===YT_END.getFullYear() && m===11) ? ' ' + y : '')));
+    const grey = {type:'pattern', pattern:'solid', fgColor:{argb:'FFD9D9D9'}};
+    days.forEach((d, i) => {
+      const c = col(i);
+      const a = ws.getCell(R_DAY, c); a.value = d.getDate(); a.alignment = center;
+      const b = ws.getCell(R_WD, c); b.value = 'MTWTFSS'[(d.getDay()+6)%7]; b.alignment = center;
+      ws.getColumn(c).width = 4.5;
+      if (d.getDay()===0 || d.getDay()===6){ a.fill = grey; b.fill = grey; }
+    });
+    const thin = {style:'thin', color:{argb:'FFBFBFBF'}};
+    let row = R_BODY;
+    for (const [key, label] of YT_BODY){
+      if (key === null){ row++; continue; }
+      if (label){ const lc = ws.getCell(row, 1); lc.value = label; lc.font = {bold:true}; }
+      const cells = r.cells[key] || {};
+      days.forEach((d, i) => {
+        const tx = cells[dkey(d)]; if (!tx) return;
+        const c = ws.getCell(row, col(i));
+        c.value = tx.join('\n');
+        c.alignment = {wrapText:true, vertical:'top', horizontal:'center'};
+        c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF2CC'}};
+        c.border = {left:thin, right:thin, top:thin, bottom:thin};
+        c.font = {size:8};
+      });
+      ws.getRow(row).height = 45;
+      row++;
+    }
+    ws.getColumn(1).width = 14;
+    const buf = await wb.xlsx.writeBuffer();
+    await saveFile('YEAR_TEMPLATE_AGENDA.xlsx', new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  } catch(err){
+    toast(err && err.message === 'load' ? 'The Excel writer did not load. Check your connection and try again.' : 'Could not build the Excel file.');
+  } finally { btn.disabled = false; btn.textContent = 'Export to Excel'; }
+}
+
+$('yrExport').onclick = ytExport;
+$('yrSample').onclick = () => { Y.text = SAMPLE_YEAR_ICS; Y.name = 'Sample agenda (invented)'; Y.own = true; Y.result = null; Y.scrolled = false; renderYear(); toast('Loaded the sample agenda'); };
+$('yrToday').onclick = () => ytScrollTo(today0());
+$('yrFile').onchange = e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { const t = String(rd.result); if (!/BEGIN:VEVENT/.test(t)){ toast('No events in that file. Export the calendar from Outlook as .ics and try again.'); return; } Y.text = t; Y.name = f.name; Y.own = true; Y.result = null; Y.scrolled = false; renderYear(); toast(`Loaded ${f.name}`); };
+  rd.readAsText(f);
 };
 
 /* Help tooltip: hover on desktop, tap on touch screens */
